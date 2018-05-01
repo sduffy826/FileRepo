@@ -1,0 +1,1228 @@
+
+<!-- ============================================================================================ -->
+
+<h3>Remember!</h3>
+<p>The underscore means ignore this</p>
+<p>functions are format 'func funcName(label name: Type)' you call the func as funcName(label: 3), 
+   the label must be present when you call the func, the 'name' is the variable name 
+   you use inside your func; the short version is 'func funcName(name: Type)' this means 
+   that the label and the name are both the same, you call with 'funcName(name: 3)'.  
+   If you want to call a function without a label use _, so 
+   'func funcName(_ name: Int)' allows you to call it like 'funcName(3)'</p>
+
+<p>If you want to ignore the value returned from a function you can do<pre>
+_ = funcName(...)</pre></p>
+<p>Can do same by ignoring element of tuple returned<pre>
+let (abc, _, xyz) = func(...)</pre></p>
+
+<p>Get color literal, type 'color' in editor</p>
+
+<!-- ============================================================================================ -->
+<hr />
+<h3>Book notes</h3>
+
+<p><strong>constants/variables</strong> let xxx = value  (not type annotation specified otherwise 
+    its let variablename: Int = 5 the ":" is read as 'of type' so read let varname: Int = 5 
+    as let varname of type Int to be value 5 vars, you can declare multiple on same line, 
+    var red, green, blue: Double</p>
+
+<p>constants and variables can be named almost any character; including unicode; 
+   they can't contain whitepace, math symbols, arrows but almost anything else, 
+   if you had to give a constant or variable the same name as a reserved word then 
+   you surround the keyword with backtick ` (but avoid doing this)</p>
+
+<p>The print function is type print(_: separator: terminator:), the 
+   separator/terminator have default values so you don't need to include them, 
+   by default it adds line break after print, to print without line break 
+   do print(someValue, terminator: "").  Swift uses string interpolation to 
+   include name of constant or variable in string.. do print("this is string \(withVariableOutput)")</p>
+<p>Comments // or /* *.</p>
+<p>Semicolons, only required if you put multiple lines of code on same line </p>
+
+<h4>Datatypes:</h4>
+<dl>
+  <dt>Ints</dt>
+    <dd>default signed, there are unsized in 8,16,32,64 bit forms (UInt8...), 
+        you can access min/max bounds by UInt8.min or UInt8.max; if you define 
+        Int or don't pick size it'll default to current platform native word size; 
+        on 32 bit it's Int32, on 64 it's Int64.  UInt is similar but unsigned.</dd>
+  <dt>Floating-point</dt>
+    <dd>numbers have fraction; Double is 64 bit floating point, Float is 32 bit; a Double 
+        has 15 bit precision while float can be as little as 6; Double is usually the 
+        preferred datatype to use</dd>
+  <dt>Bool</dt>
+    <dd>true or false</dd>
+  <dt>Numeric literals</dt>
+    <dd><pre>
+      Can use _ to make int readable i.e. var million = 2_000_000 same as 2000000 (but more readable)
+      0bxxxx for binary (i.e. 0b10001 for binary/17)
+      0oxxxx for octal (i.e. 0o21 for octal/17)
+      0xxxxx for hex  (i.e. 0x11 for hex/17)
+      1.25e2 for floating point 1.25*10^2 or 125.00
+      0xFp2 is 15*2^2 or 60.0
+      0xFp-2 is 15*2^-2 or 15/4 or 3.75</pre></dd>
+</dl>
+
+<h4>Type conversion</h4>
+<dl>
+  <dt>datatypes</dt>
+     <dd>must be similar, so you must cast them, note you 
+         even need to do with adding a Int8 to Int16 it will cast</dd>
+  <dt>Type aliases</dt>
+    <dd>you can define a literal to represent a 
+        type (not sure how much you'd use... maybe good like domain in sap)
+        i.e. typealias AudioSample = UInt16</dd>
+  <dt>Tuples</dt>
+    <dd>groups of values in single compound value, very useful for returning values from functions
+        <pre>let http404Error = (404, "Not found")</pre>
+        So above is a tuple with an Int and a String; you can decompose by:<pre>
+        let (statusCode, statusMessage) = http404Error
+        print("Status code: \(statusCode) message: \(statusMessage)")</pre>
+        if only need one value<pre>
+        let (statusCode, _) = http404Error (the _ means ignore that value)</pre>
+        Can also reference with index<pre>
+        print("Status code: \(http404Error.0) message: \(http404Error.1)")</pre>
+        You can also give the values a name<pre>
+        let http200Status = (statusCode: 200, description: "OK")</pre>
+        then can do: <pre>
+        print("Status code: \(http200Status.statusCode) message: \(http200Status.description)")</pre></dd>
+  <dt>Optionals</dt>
+     <dd>They have two states, have a value, and don't have a value.  
+         You need to unwrap an optional to get at it's value; an optional 
+         is defined like Int? not Int, the ? identifies it as an optional meaning 
+         it has an Int or no value at all.  You assign an optional as 'valueless' 
+         by using nil<pre>
+         var: serverResponseCode: Int? = 404
+         serverResponseCode = nil  // Make it novalue</pre>
+         If you define an optional but don't give it a value then it's valueless (nil)<br/>
+         Note: the 'nil' is not an empty ptr like in C or Objective-C</dd>
+  <dt>Unwrapping</dt>
+    <dd>You unwrap value with ! (if you do this to valueless object a runtime exception is thrown)
+        you can compare optional to nil (ie.<pre>
+        if serverResponseCode != nil { 
+          print("value is: \(serverResponseCode!)")}
+        </pre>
+        optional binding, can be used with if/while block<pre>
+        if let someVar = Int(someOtherVar) {...}  </pre>
+        Casting returns an optional, could use if var ..., you can include 
+        many optional bindings here, if any are nil or a bool evaluates to false then 
+        the if is considered false... i.e<pre>
+        if let first = Int("4"), let second = Int("42", first &lt; second &amp;&amp; second &lt; 100 { ... }</pre>
+        Note: constants/variables with optional binding in an if stmt is only available in body 
+        of the if, constants/vars with a <strong>guard</strong> statment are available in lines 
+        after the guard (read about early exit)</dd>
+  <dt>Implicitly Unwrapping Optionals</dt>
+     <dd>Sometimes you know that the optional will always have a value after it's first set, 
+         in this case you don't want to unwrap at every reference.  For these use the ! instead 
+         of the ? after the type (i.e var lastName: String!), one of the primary uses of this 
+         is during class initialization.  Implicit optionals are like telling computer to 
+         automatically unwrap it every time it's used.  You can still test these for nil.  
+         You don't want to use implicit optionals if the variable will become nil later on</dd>
+  <dt>Optional Chaining</dt>
+      <dd>You specify ? after the optional on which to call a property, method or subscript
+          if the optional is non-nil.  The main difference between this and ! is that this
+          will fail gracefully whereas forcing unwrapping (!) will create runtime exception.
+          Note the return type of this is an 'optional' of the return type (even if the
+          call your making doens't return an optional.</dd>
+</dl>
+
+<h4>Errors</h4>
+<p>A function that encounters an error throws the error, the caller can catch it i.e<pre>
+func canError() throws { ... }</pre>
+The caller has code like
+<pre>do {
+  try canError()
+  // No error was thrown if got here
+} catch {
+  ... logic to handle error
+}
+</pre></p>
+<p>The <strong>do</strong> statement creates a new containing scope which allows error to be 
+propogated to one or more catch blocks</p>
+
+<h4>Assertions and preconditions</h4>
+<p>Use to make sure essential condition satisfied before continuing.
+   If the boolean condition in the assertion or precondition is true 
+   then the code continues, if false then the program is invalid and 
+   execution ends, your app terminates.</p>
+
+<p>You cannot catch failed assertions, your app terminates</p>
+
+<p>The difference between assertions/preconditions; assertions are checked only in debug builds, 
+   preconditions are checked in debug and production builds.  
+   You generally use assertions for development; they'll be ignored when you 
+   do production build.  The format for assertion is<pre>
+assert(_:_:file:line:)</pre>
+Not sure how to read above... you call like<pre>
+assert(age >= 0, "Person can't be less than zero")</pre>
+This means terminate program if age &lt; 0; (think) it'll display message when it terminates
+The file is the name of the file to print when assertion fails, defaults to current file
+The line is the line# to print, also defaults to line where assert is called</p>
+
+<p>Can use 'assertionFailure("message")' to indicate failure... useful at bottom of if or case statement</p>
+
+<p>Preconditions - like assertions but checked in production and debug builds<pre>
+precondition(age >= 0, "Can't be less than zero")</pre></p>
+
+<h4>Operators</h4>
+<pre>
++, -, *, /, % (modulus), =,  (fyi an infix operator is one that's between two operands (2+3))
++=, -=, *=, /=
+range operations a..&lt;b and a...b
+unary: -a, !b
+</pre>
+<p>You can decompose tuple with assignment<pre>
+let (x, y) = (3, 4)</pre></p>
+
+<p>Note: unlike C the assignment operator doesn't have side effect of returning 
+   a value (this avoids misusing = and == (in c if x = y is valid, not in swift))</p>
+<pre>
+String concatenation is +
+Comparison, ==, !=, &gt;, &gt;=, &lt;, &lt;=
+</pre>
+<p>With tuples (if have same type && number operands), it compares 
+   each element of one tuple to the next element and returns when it 
+   can (1, "Zebra") &lt; (2, "Frog") //true cause 1 &lt; 2
+   ternary operator (x &lt; y ? "less" : "not less")</p>
+<p>nil-coalescing, if an optional has a value return it, otherwise 
+   return a default value (i.e it's a shorthand for things like (a != nil ? a! : b), you write like 
+<pre>(a ?? b)</pre></p>
+
+<h4>Range operators</h4>
+<dl>
+  <dt>closed range (a...b)</dt>
+    <dd>it includes values a and b (for index in 1...5 { print("index is: \(index)") } 
+        this would print 1 thru 5 values.</dd>
+  <dt>half open (a..&lt;b)</dt>
+    <dd>it doesn't include value b</dd>
+  <dt>One-sided (...N or N...)</dt>
+    <dd>say had array (let names = ["Ann","Alex","Brian","Jack"]) and did<pre>
+        for name in names[2...] this would look at Brian and Jack
+        for name in names[...2] would look at Ann, Alex, Brian, can also do [..&lt;2]</pre></dd>
+</dl>
+
+<h4>Range variables</h4>
+<pre>
+let range = -5...5 
+if range.contains(3) // returns true
+let range = ...5
+if range.contains(-100)  // returns true (it's infinity on before range :))
+</pre>
+
+<h4>Logical operators</h4>
+<pre>
+! not
+&amp;&amp; and
+|| or
+</pre>
+
+<h4>String</h4>
+<p>Strings, you can have multiline with three quotes; it will ignore whitespace 
+that is at the same level of the ending quote (note the """ must be on their own lines)</p>
+<pre>
+var someString = """
+                 This is the start line
+                   this one is indented two spaces
+                 back at the main level :) you can prevent line break by putting \
+                 at the end of the line
+                 
+                 """</pre>
+<p>You see you can have extra blank lines</p>
+
+<ul>
+<li>Strings are value objects, so when you pass to function they are a new copy</li>
+<li>The escape characters \0 (null), \\ (backslash), \t (tab), \n (line feed) \r (carriage return),
+  \" (double quote), \' (single quote)</li>
+<li>Unicode \u{n} where n is 1-8 hex digit for unicode value</li>
+<li>var emptyStr = "" or var emptyStr = String()</li>
+<li>var is mutable string, let is unmutable one :)</li>
+<li>can iterate over string (for character in "SeanIsGood" { })</li>
+<li>assign as character let questionMark: Character = "?"</li>
+<li>concatenate with + or +=</li>
+<li>String interpolation print "This includes \(someVariable) in it" - this casts the 'someVariable'
+value to a string and includes it within the string literal; you can have any expression here.</li>
+</ul>
+
+<h4>Unicode</h4>
+<p>Swift treats strings as unicode scalar values; they are a 21 bit number for a character
+or a modifier such as U+0061 for the latin small letter a ("a");</p>
+<p>Every swift character type represents an 'extended grapheme cluster' it's a sequence of one or more
+unicode scalars that when combined create a single human readable character.  An example: the letter
+'e' with the accute accent can be represented by unicode U+00E9; but it can also be a combination of
+the letter 'e' U+0065 + the accute accent U+0301, these two represent the same character, in code
+they'd be
+<pre>
+  let eAcute: Character = "\u{E9}"
+  let combinedEAcute: Character = "\u{65}\u{301}"
+</pre>
+This lets u do some cool stuff... combing enclosing circle and put a character in it<pre>
+  let enclosedEAcute: Character = "\u{E9}\u{20DD}"
+</pre></p>
+<p>Counting characters, use count property: stringVar.count; note it counts characters, not the 
+gapheme clusters; so combinedEAcute.count is 1 (not the two unicode scalars)
+<strong>Note</strong> the count property iterates thru the string to identify how many 
+characters there are; also the length property of NSString is based on 16 bite utf-16 
+representation and not the number of unicode extended grapheme clusters so it doesn't have
+to be the same as the count of characters.</p>
+
+<p>To access the first character in a string use string.startIndex, the position after the
+last character is at string.endIndex, if a string is empty then startIndex and endIndex are equal.
+You access indices before and after a given index by using index(before:) and index(after:), to
+access a index further you can use index(_:offsetBy:).  i.e.<pre>
+let greeting = "Guten Tag!"
+greeting[greeting.startIndex]  // G
+greeting[greeting.index(before: greeting.endIndex)] // !
+greeting[greeting.index(after: greeting.startIndex)] // u
+let index = greeting.index(greeting.startIndex, offsetBy: 7)]
+greeting[index] // a
+</pre></p>
+<p>Attempting to access an invalid index will result in runtime exception
+You can use 'indices' property to access all the indices of individual characters, 
+<pre>  for index in greeting.indices { print greeting[index] }</pre></p>
+
+<p><strong>Note</strong> you can use startIndex, endIndex, index(before:), index(after:) and
+index(_:offsetBy:) methods on any type that conforms to the collection protocol, this includes
+String, Array, Dictionary and Set.</p>
+
+<p>Inserting: use insert(_:at:) i.e.<pre>
+  var welcome = "hello"
+  welcome.insert("!", at: welcome.endIndex)  // now have "hello!"
+also
+  welcome.insert(contentsOf: " there", at: welcome.index(before: welcome.endIndex))
+  you'd now have "hello there!"
+</pre></p>
+
+<p>Remove characters or range:<pre>
+  welcome.remove(at: welcome.index(before: welcome.endIndex)) // now have "hello there"
+  let range = welcome.index(welcome.endIndex, offsetBy: -6)..&lt;welcome.endIndex
+  welcome.removeSubrange(range) // now have "hello"
+</pre></p>
+
+<p><strong>Substrings</strong>, when you get a substring of a string, the result is 
+   an instance of Substring, not a String, when you're done with the Substring cast 
+   it back to String (Substrings are meant to exist for a short amount of time, it 
+   has to do with the way swift optimizes)<pre>
+  let greeting = "hello, world!"
+  let index = greeting.index(of: ",") ?? greeting.endIndex
+  let beginning = greeting[..&lt;index] // beginning is Substring with "hello"
+  let newString = String(beginning)  // convert back to String
+</pre></p>
+
+<p><strong>Comparing</strong>: You use == to compare two strings, note they're considered equal 
+   if they have the same linguistic meaning and appearance... even if composed of different 
+   unicode scalars.  This mean that the eAcute and combinedEAcute variables earlier are equal.</p>
+
+<p>Can do stringVar<strong>.hasPrefix</strong>("some literal") this will return true if it has 
+   the prefix string stringVar<strong>.hasSuffix</strong>("some ending string") will be true if 
+   it ends with that string</p>
+
+<p>You can access the unicode compliant representation of string, you can do:<pre>
+  for codeUnit in stringVar.utf8 {} or stringVar.utf16 or stringVar.unicodeScalars </pre>
+you know what utf8 and utf16 are, the unicodeScalars is the 21 bit value.</p>
+
+
+<h4>Collections</h4>
+<p>There are <strong>array, set</strong> and <strong>dictionaries</strong>.  There mutability
+  is based on way you declare (var vs let).  Make immutable if possible for optimization.</p>
+
+<h5>Arrays</h5>
+<p>Store similar types of data, can declare Array&lt;Element&gt; or use shorthand [Element].
+  Use shorthand if possible.  Create empty array by 'var someInts = [Int]()'  You can create
+  with default value/length 'var threeDoubles = Array(repeating: 0.0, count: 3)'.  Can create
+  new array based on other arrays 'var sixDbls = threeDoubles + [3.0, 4.1, 5.5]'</p>
+
+<h5>Sets</h5>
+<p>Set is collection where no ordering, and a value only appears once (no dupes).  A type must
+  be 'hashable' to be in a set, the hash value is an Int, all basic types (String, Int, Double
+  and Bool) are hashable, enumeration case values (without associated values) are also hashable.
+  You can use custom types as long as they conform to the Hashable protocol (read more on
+  protocols).</p>
+<p>Syntax:  var someSet: Set&lt;Element&gt;()  There's no shorthand for sets, example<pre>
+    var letters = Set&lt;Character&gt;()
+    letters.insert("a")  // Now set has one element
+    letters = []         // Letters is now the empty set again </pre></p>
+<p>You can initialize set with array literals:<pre>
+    var names = Set&lt;String&gt; = ["John","Mary","Sara"]</pre>
+    <strong>Note</strong> You have to specify Set but can omit type if it can be inferred, so this<pre>
+    var names = Set = ["John","Mary","Sara"]</pre>
+    would have been fine</p>
+<p>If you use sorted() method you can get the values from a set as an array that's sorted... remember it's
+   an array that's returned, no longer a set</p>   
+<p><strong>Intersection</strong> of set: setName.intersection(otherSet) returns a set with intersecting elements</p>
+<p><strong>Union</strong> of set: setName.union(otherSet), a set with elements from both sets</p> 
+<p><strong>Difference</strong> of set: setName.symmetricDifference(otherSet), a new set without the elements that
+   intersected (so it has elements from setName and otherSet but not the intersecting ones)</p>
+<p><strong>Subtracting</strong> of set: setName.subtracting(otherSet), elements in setName that don't intersect the
+other set (so no elements from otherSet)</p>
+<p><strong>Equality</strong> two sets are '==' if they both have the same values</p>
+<p><strong>Subset</strong> of set: setName.isSubset(of: otherSet)  if all elements in setName are in otherSet</p>
+<p><strong>Superset</strong> of set: setName.isSuperset(of: otherSet)  if setName has every element that's in otherSet</p>
+<p><strong>StrickSubset</strong> of set: setName.isStrickSubset(of: otherSet) if setName is a subset of otherSet and they
+  are not equal</p>
+<p><strong>StrickSuperset</strong> of set: setName.isStrickSuperset(of: otherSet) if setName is a superset of otherSet and they
+  are not equal</p> 
+<p><strong>Disjoint</strong> of set: setName.isDisjoint(with: otherSet) if setName has no elements in common with otherSet</p>  
+
+<h5>Dictionaries</h5>
+<p>A dictionary is a key value pair.  All keys have to be the same type and all values have to be the same type.  You
+  should use shorthand to define i.e: [Int: String] (longform is Dictionary&lt;KeyType, ValueType&gt;,
+  there's no order to dictionary, keys are unique, keys have to be hashable.</p>
+<p>Create empty with var someDict = [Int: String]()</p>
+<p>Assign: someDict[5] = "Fingers on hand"</p>
+<p>Clear dictionary: someDict = [:]</p>
+<p>Create from literals: var numberNames = [1 : "One", 2: "Two", 3: "There", 4: "Four"]</p>
+<p>Change: numberNames[3] = "Three"  or numberNames.updateValue("Three", forKey: 3)</p>
+<p>If need keys or values in an order, get keys or values into an array
+  and sort it, i.e.: let numberKeys = ([Int](numberNames.keys)).sorted()</p>
+
+<h5>Collection methods/props</h5>
+<dl>
+  <dt>Start at 0</dt>
+    <dd>Remember they start at 0 and go to numElements-1 (range 0..&lt;count))</dd>
+  <dt>count</dt>
+    <dd>Returns number of elements in collection</dd>    
+  <dt>append</dt>
+    <dd>Add element to end of collection (can also do: array += [item] or array[array.count] = value)</dd>
+  <dt>isEmpty</dt>
+    <dd>returns true if collection is empty (count == 0)</dd>
+  <dt>Subscripts[indexPos]</dt>
+    <dd>Can access item by collectionName[indexPos]</dd>
+  <dt>remove(at: x)</dt>
+    <dd>Removes item from collection and returns it to caller</dd>
+  <dt>remove from dictionary</dt>
+    <dd>setName[key] = nil or setName.removeValue(forKey: keyValue) (the removeValue returns value if existing too)</dd>
+  <dt>removeLast</dt>
+    <dd>Removes last element in collection, and returns it to the caller</dd>
+  <dt>Iterating</dt>
+    <dd>for item in arrayName { print("item: \(item)") }</dd>
+  <dt>Iterating (on array)</dt>
+    <dd>Can also extract the index and value (via tuple on an array)<pre>
+      for (index, item) in arrayName.enumerated() { print("index: \(index) hasValue: \(item)") }</pre>
+    </dd>
+  <dt>Iterating on dictionary</dt>
+    <dd> for (keyValue, itemValue) in dictionary {...} <br/>
+         for keyValue in dictionary.keys {...}<br/>
+         for itemValues in dictionary.values {...}</dd>
+  <dt>contains (for set)</dt>
+    <dd>if setVariableName.contains(element) {....}</dd>
+</dl>
+
+<h4>Control Flow</h4>
+<dl>
+  <dt>for-in</dt><dd>for xx in collection (iterate over collection)<br/>
+                    for (key, value) in dictionary (get tuple from collection)<br/>
+                    for index in 1.-.5 (ranges)
+                    for _ in 1..&lt;someVar (iterate but don't need sequence value)<br/>
+                  for idx in stride(from: start, through: ending, by: incrementValue) (closed range by specify inrement)</dd>
+  <dt>while</dt><dd>same as used to in java</dd>
+  <dt>repeat { } while</dt><dd>same as used to</dd>
+  <dt>if</dt><dd>Same as you're used to in java</dd>
+  <dt>switch</dt><dd>Similar to java but no 'break' needed, also you need at least one executable
+                    statement for each body (can use 'break' for that if needed),
+                    can have multiple conditions (like value2/3 below),
+                    if condition is matched by multiple case stmts then only the first is executed, examples:<br/>
+       switch value2Consider { case value1: ... case value2, value3: ... default: ... }<br/>
+       supports interval matching: switch someNum { case 0: ... case 1..&ltp5: ... default: ... }<br/>
+       supports tuples and can ignore tuple value: switch somePoint { case (0,0): ... case(_, 0): xaxis.. case(-2..2, -2..2): ... }<br/>
+       value binding, can assign in case and use in body:<pre>
+          let somePoint = (2, 0)
+          switch somePoint {
+            case (let x, 0): print("on x axis at point \(x)")
+            case (0, let y): print("on y axis at \(y)")
+            case let(x, y): print("somewhere else, at (\(x), \(y))")            
+          }</pre><br/>
+      where clause, can use it for additional conditions<pre>
+          switch somePoint {
+            case let(x,y) where x == y: print("on line diagnol x=y")
+          ...youknowtherest :)}</pre><br/>
+      compound case, <pre>switch aChar { case "a", "e", "i", "o", "u": print("vowel")
+                                    case "s", "p", "d": print("init letter")
+                                    default: print("another :)") }</pre></dd>
+  <dt>control transfer</dt><dd>continue - skip to top of loop<br/>
+                               break - terminate a switch/case block or loop<br/>
+                               fallthrough - to tell switch to fall into next block in the case (don't think case can have let 
+                                 statement though)<br/>
+                               label stmts - since you can have continue/break you sometimes need to tell swift which control
+                                 statement you want to continue/break on, do this by naming a statement <pre>
+                                    labelName: statement { ... (can do break labelName here) ...}</pre><br/>
+                               early exit (guard stmt) - like an if, but always has an else component and that
+                                 must cause control to exit the block (not sure I like guard)<pre>
+                                 guard let location = person["location"] else { codeToTransferControlOutOfBlock }</pre></dd>
+  <dt>Checking API</dt><dd>You can check api availability in code, this is good use of guard :)<pre>
+                            if #available(platformName version, ..., *) { ... stmts if api avail... }</pre>
+                            the last arg * is required and specifies that on other platforms the body executes on minimum
+                            deployment target specified in your target.  and example is<pre>
+                            if #available(iOS 10, macOS 10.12, *) {...}</pre></dd>
+</dl>
+
+<h4>Functions</h4>
+<p>You've seen functions of form:<pre>
+  func funcName(argumentLabel parameterName: Type, secondArgLbl secParmName: Type2) -> RtnType { }</pre>
+  When you call funcName you specify argumentLabel, the function body uses the parameterName.
+  If you don't specify an 'argumentLabel' then it'll use the parameterName as the label. You 
+  can omit the argumentLabel by using '_', so <pre>
+  funcGreet(_ personName: String) { print("Hello \(personName)") }</pre>
+  can be called like funcGreet("Sean").</p>
+
+<p>You can have a function without parm, and without return type<pre>
+   func sayHi() { print("Hi :)") }  </pre>
+   Note a function really returns a value, but it returns Void (so not needed/written).  Also
+   you can ignore the function return type even if it returns one, say function hiMom prints 
+   something out and also returns a string, you can call it and ignore the return value by
+   either of the following calls<pre>
+     let _ = hiMom()  
+     hiMom()</pre>
+   </p>
+<p>You can have multiple return types from a function by using a tuple<pre>
+   func minMax(array: [Int]) -> (min: Int, max: Int) { ... } </pre>
+   Note we named the tuple values so you could do <pre>
+    let bounds = minMax(array: [2, 4, -1, 3])
+    print("min is \(bounds.min)")</pre>
+   If the tuple returned has the potential do be 'no value' then you make
+   it an optional tuple by:  (min: Int, max: Int)? this means the entire
+   tuple is optional (not the individual entries).</p>
+
+<p>Default parameter values: assign a value after the function type, typically you put parms with a
+   default value at end of parmList (for readability, and because parms without default values are
+   usually more important)<pre>
+     func funcName(someParm: Int, parmWithDef: Int = 12) {...}</pre></p>
+
+<p><strong>Variadic</strong> parameters - means zero or more values, you write them by
+   putting ... after the parameters type<pre>
+   func mean(_ numbers: Double...) -&gt; Double { ... }</pre>
+   You then can call with <pre>
+   let meanValue = mean(1, 2, 4, 5, 10, 3)</pre>
+   The body of the function treats the variadic parm as an array of that type, so in the
+   example above you could have a body like<pre>
+     var total: Double = 0.0
+     for number in numbers { total += number }
+     return total / Double(numbers.count)</pre></p>
+
+<p><strong>In-Out</strong> parameters- means you can change the parameter value in the
+   body of the func.  You place the inout keyword right before the parameters type.
+   When you pass an inout parm you have to prefix the name with & to identify it
+   as a parm that changes. i.e.<pre>
+     func swapInts(_ a: inout Int, _ b: inout Int) {
+       let temp = a
+       a = b
+       b = temp
+     }</pre>
+     call it with <pre>swapInts(&someInt, &anotherInt)</pre></p>
+
+<p><strong>Function Types</strong> Every function has a type, this
+    type is like any other type in swift i.e. <pre>
+    func addInts(_ a: Int, _ b: Int) -&gt; Int { return a + b }
+    func multInts(_ a: Int, _ b: Int) -&gt; Int { return a * b }</pre>
+   These functions both have type: (Int, Int) -&gt; Int, you read it as
+   a function that takes two ints and returns an int.  If you had
+   func hiMom() { print("hi mom") } this is a type of () -&gt; Void, or
+   a function with no arguments that returns Void.<br/>
+   Using function types<pre>
+    var mathFunc: (Int, Int) -&gt; Int = addInts</pre>
+   This means define a variable mathFunc which is a type of a function
+   that takes two ints and returns an int, set the new variable to 
+   refer to function 'addInts'.  Later you can change it to be
+   mathFunc = multInts.  If you then do mathFunc(2, 4) it's the
+   same as calling multInts with 2 and 4.<br />
+   As with other things, swift can infer the type so you could
+   just do 'var mathFunc = addInts'</p>
+
+<p><strong>Functions as parameters</strong> you can use function types
+   as a parameter to another function i.e.<pre>
+   func printMathFunc(_ mathFunc: (Int, Int) -&gt; Int, _ a: Int, _ b: Int) {
+     print("mathFunc returned: \(mathFunc(a, b))"}</pre>
+   so printMathFunc has three parms, the first is a function that takes two ints
+   and returns an int, the next two arguments are ints.  When you call
+   printMathFunc you can pass any function of that type (i.e. addInts, multInts).</p>
+
+<p><strong>Functions as return types</strong> yes you can also use a function
+   type as a return type; you do this by writing the complete function type
+   immediately after the return arrow.  Remember function type is like
+   (Int, Int) -> Int so you'd see a function that returns this type like:
+   func someFunc(_ a: Int, _ b: Int) -> (Int, Int) -> Int (yea confusing
+   at first :)  Here's example<pre>
+   func decrement(_ a: Int) -> Int { return a - 1 }
+   func increment(_ a: Int) -> Int { return a + 1 }
+   func chooseOperator(backward: Bool) -> (Int) -> Int {
+     return backward ? decrement : increment
+   }
+   var someInt = 5
+   let func2Zero = chooseOperator(backward: someInt > 0)  
+   while (someInt != 0) { someInt = func2Zero(someInt) }</pre>
+   In this example the increment/decrement are obvious, the chooseOperator function
+   takes in a boolean and returns a function type of (Int) -> Int; in the body
+   it returns the function (based on bool arg).  The variable func2Zero gets 
+   assigned the function to call (either decrement or increment) based on the
+   value of someInt... we then call it repeatedly till we hit zero.</p>
+
+<p><strong>Nested functions</strong> You can define a function inside another
+   function, they're called nested functions.  They're typically hidden from
+   the outside world, but you can return them so that they're available in
+   another scope... this could be done by rewriting the chooseOperator as<pre>
+   func chooseOperator(backward: Bool) -> (Int) -> Int {
+     func decrement(_ a: Int) -> Int { return a - 1 }
+     func increment(_ a: Int) -> Int { return a + 1 }
+     return backward ? decrement : increment
+   }</pre></p>
+
+<h4>Closures (like lambdas)</h4>
+<p>Self contained blocks of functionality that can be passed around and used in your code.
+   They are similar to blocks in c/objective-c and lambda's in other languages.  Closures
+   can have there own references to constants and variables (they call it closing over
+   constants and variables).  There are three types</p>   
+<ol>
+  <li>Global functions - have name and do not capture values</li>
+  <li>Nested functions - have name and can capture values</li>
+  <li>Closure expressions - unnamed written in lightweight syntax that can capture
+      values from their surrounding context</li>
+</ol>
+<p>Example for a sorted(by:) method, it takes a closure to sort an array; it expects
+   two arguments and should return a boolean to say whether the first value should
+   appear before the second, return true if the first should be before and a false
+   otherwise.  The function type for this is (on a string array)<pre>
+    (String, String) -> Bool</pre>
+  A normal function for this (to sort reverse) might be<pre>
+    func backward(_ s1: String, _ s2: String) -> Bool { return s1 > s2 }
+    You'd then have someArray.sorted(by: backward)</pre>
+  A <strong>closure</strong> express syntax is<pre>
+    { ( parameters ) -> returnType in statements }</pre>
+  So you'd have above func in a closure statement like<pre>
+    someArray.sorted(by: { (s1: String, s2: String) -> Bool in return s1 > s2 })</pre>
+  So you can see the parms/return type of 'backward' and the closure are the same,
+the inline closure has the parms and return type in curly braces, not outside them.</p>
+
+<p>The parameters can be inout parms but they can't have default values.  Variadic
+  can be used if you name the variadic parameter.  Tubles are also permissable as
+  parameters and return types.</p>
+
+<p>Inferring type from context; since we know the args and the return type we
+don't need to write them... we could write<pre>
+  someArray.sorted(by: {s1, s2 in return s1 > s2 })</pre>
+If it's a single statement closure you don't need return; it knows that.<br/>
+There shorthand for the argument names too, you can use $0, $1... for the 
+arguments, so you can get away with<pre>
+  someArray.sorted(by: { $0 > $1 }) </pre></p> 
+         
+<p><strong>Operator Methods</strong> swifts string type defines
+  a string-specific implementation of greater than (&gt;) operator
+  that takes two strings and returns a bool  This matches the type for
+  the sorted(by:) method, so you can use it<pre>
+    someArray.sorted(by: >)</pre>
+  read more about operator methods</p>
+
+<p><strong>Trailing closure</strong> Instead of passing the closure
+  as a function argument you can write it as a trailing closure (this
+  only works when it's the last argument to the func); it's
+  written after the functions (), it's still an argument just not
+  within () :)  When you do this you don't write the argument
+  label for the closure part of the call.  In example above
+  we could replace<pre>
+    someArray.sorted(by: { $0 > $1 })</pre>
+  with<pre>
+    someArray.sorted() { $0 > $1 }</pre>
+</p>
+
+<p>Little useful example, a map method takes a closure as argument, it's
+   called for each element on the array and it returns an alternate 
+   value for the mapped element (can be a different type).  So you
+   could have a map that converts integers to numeric equivalent<pre>
+    let digitNames = [
+      0: "Zero", 1: "One", 2: "Two", 3: "Three, 4: "Four", 
+      5: "Five", 6: "Six", 7: "Seven", 8: "Eight", 9: "Nine"]
+    let numbers = [16, 23, 704]
+    let stringNums = numbers.map{ (num) -> String in
+      var number = num
+      var output = ""
+      // Strip of numbers right to left, convert and put in output str
+      repeat {
+        output = digitNames[number % 10]! + output
+        number /= 10
+      } while number > 0
+      return output
+    }</pre>
+  So you can see stringNum will contain ["OneSix", "TwoThree", "SevenZeroFour"]
+  after the call... pretty cool</p>
+
+<p><strong>Capturing values in closures</strong> you can capture a value
+   in a closure from it's surrounding context, you can do this even when
+   the original body scope no longer exists.  Not sure I like this (for
+   maintainability) but here's an example<pre>
+    func makeIncrementer(forIncrement amount: Int) -> () -> Int {
+      var runTotal = 0
+      func incrementer() -> Int {
+        runTotal += amount
+        return runTotal
+      }
+      return incrementer
+    }</pre>
+  So makeIncrementer returns a function that takes no value and returns an 
+  int; when you call it you give it the increment amount, and each time
+  you call the returned function it increments by that amount and returns
+  the new value... so here you can see it's capturing and retaining
+  the 'runTotal' variable in the closure even though it's not declared
+  in the closure<pre>
+    let incBy10 = makeIncrementer(forIncrement: 10)
+    print("value \(incBy10())")  // prints 10
+    print("value \(incBy10())")  // prints 20()</pre>
+</p>
+
+<p><strong>Functions and Closures are Reference Types</strong> when you
+  assign a function or closure to a variable you assigning by reference
+  so if you declare 'let newVar = incBy10' after the code above, and
+  then call newVar() it'd return 30; cause it's a reference to
+same function :) </p>
+
+<p><strong>Escaping closure</strong> a closure 'escapes' a function
+   when it's passed as an argument, but it's called after the
+   function returns.  This is typical with asychronous operations; they
+   use a closure as a 'completion handler'; the function returns
+   after it starts the async process but the closure isn't called
+   until after the process completes.  To signify this you 
+   code like<pre>
+    var completionHandler[() -> Void] = []
+    func funcWithEscapeClosure(completeHandler: @escaping () -> Void) {
+      completionHandler.append(completeHandler)
+    }</pre>
+  When you mark a closure as escaping you need to refer to 'self' 
+  explicitly in the body of the closure, below is an example of
+  non-escape &amp; escaping closure<pre>
+    func nonEscapeClosure(closure: () -> Void) {
+      closure()
+    }
+    class SomeClass {
+      var x = 10
+      func doSomething() {
+        funcWithEscapeClosure(self.x = 100)
+        nonEscapeClosure(x = 200)
+      }
+    }
+    let someObj = SomeClass()
+    print someObj.x // 10
+    someObj.doSomething()
+    print someObj.x // 200
+    completionHandler.first?()
+    print someObj.x // 100</pre>
+  Most of above should be obvious... when call to doSomething is made the
+  'funcWithEscapeClosure' call just puts the closure passed in
+  (self.x = 100) into the completionHandler array.  the call
+  to 'nonEscapeClosure' actually executes the command and updates
+  x.  Later we call the closure that was put into the array
+  by statement 'completionHander.first?()'  <strong>Note</strong>
+  this may look weird
+  at first, but the .first?() is called optional chaining; if
+  'first' returns a nill then no method call is made, otherwise
+  it'll make call... cool (read more on optional chaining if confused)</p>
+
+<p><strong>Auto closure</strong> it's a closure that's automatically
+   generated to wrap an expression that's passed to a function.
+   It has no args, and when called returns value of expression.
+   This 'syntactic' convenience lets you omit the braces around
+   the functions parameters by just writing an expression instead
+   of an explicit closure.  It's common to call functions that
+   take autoclosures but not common to implement them. <br/>
+   An autoclosure delays evaluation because the code isn't executed
+   till u call the closure. An example<pre>
+     var custs = ["Sean","Steve","John","Joan","Mary"]
+     let custProvider = { custs.remove(at: 0) }
+     print("Now serving \(custProvider()) ")</pre>
+   Even though first element is removed by code inside the {} the
+   code isn't executed till the closure is called.<br/>
+   If you want a function to take an autoclosure you identify
+   that by<pre>
+    func someFunc(someParm: @autoclosure () -> String) {...}</pre>
+   Read more about this... not something too common though</p>  
+
+<h4>Enumerations</h4>
+<p>Common type for group of related values that lets you work with
+   them in a type-safe way in code.  In C it assigns Ints to
+   for them; in swift it's more flexible; you don't have to provide
+   a value, if you do provide one (known as a 'raw' value) then
+   it can be string, character, int or floating point.  Enumerations
+   can specify 'associated values' to any type similar to unions
+   or variants in other languages.  They are a 'first class' type
+   they adopt features traditionally only supported by classes such
+   as computer properties and instance methods.  They can define
+   initializers, can be extended, can conform to protocols.  The
+   syntax<pre>
+    enum SomeEnum {
+      // definition
+    }
+    enum CompassPoint {
+      case north
+      case south
+      case east
+      case west
+    } </pre>   
+   The 'case' keyword is used to introduce new cases.  You can
+   define multiple cases and separate by comma<pre>
+    enum Planets {
+      case mercury, venus, earth, mars, saturn, jupiter
+    }</pre>
+   Each enumeration defines a brand new type, so like other types
+   you should start the name with a capital letter.  They should
+   (typically) not be plural.  You use them like<pre>
+    var direction = CompassPoint.west</pre>
+   The type of 'direction' is inferred, once you have defined
+   it, you can change it's value by<pre>
+    direction = .north</pre>
+   Using in switch statement<pre>
+     switch direction {
+       case .north:
+         print("bring jacket")
+       case .south:
+         print("swimmies required")
+       case .west:
+         print("wine time")
+       case .east: 
+         print("sunrise")
+     } </pre>
+   Switches have to be exhaustive so it must handle all the
+   enumeration cases (or use default:).<br/>
+   <strong>Associated Values</strong>  You can set a constant
+   or variable to be associated with the enumeration but it's
+   also useful to have an associated value along with the case.
+   This enables you to store custom info and allow you to use
+   it in code; these values can be different types for each
+   case (this is known as discriminated unions, tagged union,
+   or variants in other languages).  You can have a enum like<pre>
+     enum BarCode {
+       case upc(Int, Int, Int, Int)
+       case qr(String)
+     }</pre>
+   Here we have case where it's a upc code (with 4 ints) or
+   a qr code (string).  This definition doesn't provide the
+   values, it just defines the type.  You'd assign like
+   var barCode = BarCode.upc(8,20320, 10283, 3)<br/>
+   You can check different values in switch but the
+   associated values can be extracted, i.e.<pre>
+     switch barCode {
+       case .upc(let numSystem, let manufacturer, let product, let check)
+         print("UPC: \(numSystem), \(manufacturer), \(product), \(check).")
+       case .qr(let productCode)
+         print("QR code: \(productCode)")
+     }</pre>
+   If you want to extract all the associated values then you can
+   do with one let <pre>
+     case let .upc(numSystem, manufacturer, product, check)</pre>
+   You can prepopulate enumeration with default or 'raw values' as
+   there called, which are all of the same type<pre>
+    enum ASCIIControlCharacter: Character {
+      case tab = "\t"
+      case lineFeed = "\r"
+      case carriageReturn = "\n"
+    }</pre>
+   Raw types can be strings, characters, integers or floating point; 
+   each of the values must be unique within enum declaration.<br/>
+   <strong>Implicit raw values</strong> when working with Ints you
+   don't have to assign int for each case, when u don't swift 
+   automatically assigns them for you; if the first case doesn't
+   have value set it'll be 0, each other case is 1 greater, i.e<pre>
+    enum Planet: Int {
+      case mercury=1, venus, earth, mars, jupiter
+     } </pre>
+   In example mercury is 1, venus is 2 and so on...<br />
+   With strings the implicit raw value is the case's name, you can
+   access with<pre>
+   let directionName = CompassPoint.west.rawValue</pre>
+   <strong>Initialize from a raw value</strong> you can use the
+   rawvalue to initialize enumeration case, i.e.<pre>
+     let planet = Planet(rawValue: 4)</pre>
+   This would set it to Planet.mars (base on enum above), if you
+   give a raw value that doesn't exist it's set to nil. 
+   <strong>note</strong> since nil is possible the type of
+   'planet' is an optional (Plant?).  This type of initializer
+   is called a <strong>'failable'</strong> initializer.<br/>
+   <strong>Recursive enumerations</strong> it's an enumeration
+   that has another enumeration as it's case, you indicate
+   this with 'indirect' i.e.<pre>
+    enum ArithmeticExpression {
+      case number(Int)
+      indirect case addition(ArithmeticExpression, ArithmeticExpression)
+      indirect case multiplication(ArithmeticExpression, ArithmeticExpression)
+    }</pre>
+   You could also write 'indirect enum Arith...' to enable indirection
+   for all the cases.<br/>
+   For the example above an arithmetic expression can be a number, the
+   addition of two arithmetic expressions or the multiplication of two
+   arithmetic expressions.  So this shows how you could have (5+4)*2<pre>
+     let five = ArithmeticExpression.number(5)
+     let four = ArithmeticExpression.number(4)     
+     let sum = ArithmeticExpression.addition(five,four)
+     let product = ArithmeticExpression.multiplication(sum,ArithmeticExpression.number(2))</pre>
+   Recursion is good way for something that has a recursive structure, 
+   for example you might have an evaluate function as<pre>
+      func evaluate(_ expression: ArithmeticExpression) -> Int {
+        switch expression {
+          case let .number(value)
+            return value
+          case let .addition(left, right)
+            return evaluate(left) + evaluate(right)
+          case let .multiplication(left, right)
+            return evaluate(left) * evaluate(right)
+        }
+      }
+      print("Evaluation is: \(evaluate(product))")</pre>
+</p>
+
+<h4>Classes and Structures</h4>
+<p>You define classes or structures in a single file, you don't need to separate
+  interface from implementation.  In swift classes and structures are pretty
+  close in functionality.  The both can</p>
+  <ul>
+    <li>Define properties and store values</li>
+    <li>Have methods</li>
+    <li>Define subscripts to provide access to values (using subscript notation)</li>
+    <li>Define initializers to setup state</li>
+    <li>Be extended beyond default implementation</li>
+    <li>Conform to protocols</li>
+  </ul>
+  Classes however provide
+  <ul>
+    <li>Inheritance</li>
+    <li>Type casting, check and interpret type at runtime</li>
+    <li>Deinitializers to free up resources</li>
+    <li>Reference counting</li>
+  </ul>
+  Structures are always passed by value, so they're always copied when you pass
+  them around.<br/>
+  <dl>
+    <dt>Definition Syntax</dt>
+      <dd><pre>
+        struct Resolution {
+          var width = 0
+          var height = 0 }
+        class VideoMode {
+          var resolution = Resolution()
+          var interlaced = false
+          var frameRate = 0.0
+          var name: String? }</pre></dd>
+    <dt>Instances</dt>
+      <dl>You create both very similarly 'let resolution = Resolution() or let video = VideoMode()'</dl>
+    <dt>Access properties</dt>
+      <dl>Similar 'print("ResWidth: \(resolution.width)")' or for class could
+          do 'print("ResWidth: \(video.resolution.width)")'<br/>
+          you can also set with video.resolution.height = 1024</dl>
+    <dt>Memberwise initializers for structures</dt>
+      <dd>All structs have memberwise initializer, you can also 
+          initialize at instantiation<pre>
+          var vga = Resolution(width: 640, height: 480)</pre></dd>
+    <dt>Structures and Enumerations are value types</dt>
+      <dd>Value types are copied when they referenced, structs and enums
+          are like this... as are all basic swift types (ints, floats,
+          bools, strings, arrays, dictionaries) these are all implemented
+          as structs behind the scenes.</dd>
+    <dt>Classes are Reference Types</dt>
+      <dd>if have 'let someObj = someClass()' and then 'let var1 = someObj'
+          variables someObj and var1 point to the same area of memory, if
+          u set an attribute in one object it's reflected in the other.  You
+          typically use constants for object references since you don't
+          usually change their value and only change their attribute
+          values (which still works)</dd>
+    <dt>Identify operators</dt>
+      <dd>If you need to see if two constants or variables acually point to 
+          the same object you can use '===' or '!=='; these are called
+          'identity' operators</dd>
+    <dt>Note ==</dt>
+      <dd>The equal to checks things are equal in value (as defined by the
+          types designer)</dd>
+    <dt>Pointers</dt>
+      <dd>You don't need to use indirection (*) like u do in C/C++ or 
+          objective-c; swift handles it for you and you treat reference
+          variables just like any other var</dd>
+    <dt>Choosing class/struct</dt>
+      <dd>
+        <ul>
+          <li>Remember 'structs' are always passed by value, class by reference</li>
+          <li>Struct generally to encapsulate few relatively simple data values</li>
+          <li>Any property of a struct is also a value type</li>
+          <li>No inheritance with struct</li>
+          <li>Good candidates: shapes (with width/height), refer to range with start/end,
+              point in 3d system(x,y,z)</li>
+          <li>Classes are for custom data constructs</li>
+        </ul>
+      </dd>
+    <dt>Assignment/copy behavior</dt>
+      <dd>Swift treats strings, arrays, dictionaries as structures, this is different
+          from foundation that has NSString, NSArray, NSDictionary as classes.</dd>
+  </dl>
+
+  <h4>Properties</h4>
+  <p>These are like 'attributes' of other languages</p>
+  <dl>
+    <dt>Stored properties</dt>
+      <dd>A value associated with a class, structure or enumeration.  Can be constants (let)
+          or variables (var); can have default values.  <strong>Note:</strong> If you have a structure and
+          assign it to a constant, you can't change the instance properties of the constant,
+          even if those properties were defined as 'var' (remember this is cause structs are value 
+          types, when a 'value' type is marked as a constant then all properties are also
+          constants)<br/>
+          <strong>Lazy</strong> property is one who's initial value isn't calculated until
+          it's first used, you indicate 'lazy' before it's declaration (all lazy's must be var).
+          This is especially useful with screens, asynchronous processes, or with a value that
+          is expensive to compute and shouldn't be done till needed.  You may consider using
+          on object declaration (i.e. lazy var someObj = SomeClass())</dd>
+    <dt>Type properties</dt>
+      <dd>Value assocated with the 'type' itself, believe like 'static' attribute of other languages.
+          They can be constants or vars, you must always give type properties a default
+          value (because there's no initializer); they're lazy initialized on first access,
+          they're guaranteed to be initialized only once and don't need 'lazy' keyword. You
+          use the 'static' prefix; they're always defined as part of the type they
+          support; you reference (as with over languages) by TypName.typePropertyName</dd>
+    <dt>Computed properties</dt>
+      <dd>'Calculated' properties, they're not stored; you provide getters and setters within
+          your class, struct or enum.  The setters are optional and really applicable when
+          the calculated property needs to set another 'stored' property.  You may have
+          things like<pre>
+            struct Point {
+              var x = 0.0, y = 0.0
+            }
+            struct Size {
+              var width = 0.0, height = 0.0
+            }
+            struct Rect {
+               var origin = Point()
+               var size = Size()
+               var center: Point {
+                 get {
+                   let centerX = origin.x + (size.width / 2)
+                   let centerY = origin.y + (size.height / 2)
+                   return Point(x: centerX, y: centerY)
+                 }
+                 set(newCenter) {
+                   origin.x = newCenter.x - (size.width / 2)
+                   origin.y = newCenter.y - (size.height / 2)
+                 }
+               }
+            }
+            var square = Rect(origin: Point(x: 0.0, y: 0.0),
+                              size: Size(width: 10.0, height: 10.0))
+            let initialSquare = square.center
+            square.center = Point(x: 15., y: 15.0)</pre>
+          Here center is a computed property we access getter by using
+          dot notation (square.center and having it on the right side of =);
+          when we set it (left side =) we invoke the setter (in the
+          declaration we tell it the object to get values from (newCenter))<br/>
+          There's a <strong>shorthande</strong> where the setter gets a
+          default object of 'newValue' so you can change above section
+          of code to<pre>
+                 set {
+                   origin.x = newValue.x - (size.width / 2)
+                   origin.y = newValue.y - (size.height / 2)
+                 }</pre>
+          A computed property with only a getter is a 'read only'
+          property.  You can simplify (another shorthand) for this by
+          removing the 'get { }' block and just having<pre>
+               var center: Point {
+                   let centerX = origin.x + (size.width / 2)
+                   let centerY = origin.y + (size.height / 2)
+                   return Point(x: centerX, y: centerY)
+                 }</pre>            
+          </dd>
+    <dt>Property observers</dt>
+      <dd>You can add to stored properties you define, they monitor changes in value.<br/>
+          Property observers are called each time a property is set (even if set with
+          same value), you define for stored properties (not lazy though).  You can
+          use <strong>willSet</strong>, called before property is set and 
+          <strong>didSet</strong> called immediately after the new value is stored.<br/>
+          With 'willSet' it's passed the new property value as a constant param, you
+          can specify the name otherwise it'll default to 'newValue'.  Similarly
+          with 'didSet' it's passed the old value (u can name or use default of) 'oldValue'.
+          <br/>You declare like:<pre>
+            class StepCounter {
+              var totalSteps: Int = 0 {
+                willSet(newTotalSteps) {
+                  print("About to change totalSteps to \(newTotalSteps)")
+                }
+                didSet {  // didn't override name of 'oldValue' here
+                  if totalSteps > oldvalue {
+                    print("Added \(totalSteps - oldValue) steps")
+                  }
+                }
+              }
+            }</pre>
+          <strong>Global/local</strong> variables; the logic above for observers can
+          be used for global and local vars.
+      </dd>
+  </dl>    
+
+<h4>Methods</h4>
+<p>Methods are functions (as described earlier) that are related to a type, 
+   they exist in classes, structures and enumerations, 
+   they can be instance or type methods.   You call them using the dot notation.
+   Every instance of a type has an implicit property called 'self', you generally
+   don't code the 'self', you do <strong>however</strong> need to code 'self' if
+   the instance property has the same name as a parameter, this is because
+   parameter name has precedence of the instance property, so you need self.
+   in this case.<br/>
+   You can't modify properties of structures or enumerations with methods unless
+   you mark those as <strong>mutating</strong> i.e. <pre>
+     struct Point {
+       var x = 0.0, y = 0.0
+       mutating func moveBy(x deltaX: Double, y deltaY: Double) {
+         x += deltaX
+         y += deltaY
+       }
+     }</pre>
+  Note you can replace the complete instance entirely with self. i.e.<pre>
+     ...
+     mutating func moveBy(x deltaX: Double, y deltaY: Double) {
+       self = Point(x: x + deltaX, y: y + deltaY)
+     }</pre>
+  This replaces the point instance with a complete new reference (cool).<br/>
+  A 'type' method is declared with <strong>static</strong> keyword (instead
+  of 'static').  You access 'static' properties or other type methods from them.
+  If you want to override a static method in a subclass you use the 'class'
+  keyword i.e. <strong>class func someFunc(..)</strong></p>
+
+  <h4>Subscripts</h4>
+  <p>You can access arrays/dictionaries by subscript (someArray[index] or
+     someDictionary[key]) but you can define subscripts on classes, 
+     structs and enums also. An example<pre>
+       struct TimesTable {
+         let multiplier: Int
+         subscript(index: Int) -> Int {
+           return multiplier * index
+         }
+       }
+       let timesTable = TimesTable(multiplier: 3)
+       print("six times three is: \(timesTable[6])")</pre>
+  Subscripts can take any number of input parms, of any type and
+  they can return any type, can also use variadic parameters but
+  can't use inout or provide default values.<br/>
+  You could represent a multidimensional array with these.. i.e
+  have something linke<pre>
+    struct Matrix {
+      let rows: Int, cols: Int
+      var grid: [Double]
+      init(rows: Int, cols: Int) {
+        self.rows = rows
+        self.cols = cols
+        grid = Array(repeating: 0.0, count: rows*cols)
+      }
+      func indexIsValid(row: Int, col: Int) -> Bool {
+        return row >= 0 && row < rows && col >= 0 && col < cols
+      }
+      subscript(row: Int, column: Int) -> Double {
+        get {
+           assert(indexIsValid(row: row, col: column),"Index out of range")
+           return someArray[(row * cols) + column]
+        }
+        set {
+          assert(indexIsValid(row: row, col: column),"Index out of range")
+          grid[(row * cols) + column] = newValue
+        }
+      }
+    }
+    var myMatrix = Matrix(rows: 2, cols: 4)
+    myMatrix[0,3] = 3.21
+    print("Value is \(myMatrix[0,3])")
+    </pre>
+  This is only partial, it assumes you have one dimensional array
+  defined as 'Array(repeating: 0.0, count: numRows * numCols)'
+  </p>
+
+<h4>Inheritance</h4>
+<p>You define subclass like<pre>
+    class SubClass: ParentClass { }</pre>
+   To override a method, property etc you need to prefix it
+   with the <strong>override</strong> keyword. <br/>
+   To call super classes method (or property) you prefix
+   it with super.<br/>
+   To prevent somthing from being overriden you can specify
+   <strong>final</strong> modifier before it.
+</p>   
+
+<h4>Initialization</h4>
+<p>Initializers don't return a value (unlike objective-c), there are
+   also deinitializers; they allow for cleanup (read about).  Classes
+   and structures must have all 'stored properties' defined when 
+   the object is created.  They cannot be in an indeterminte state.
+   <br/>Inializers are of form<pre>
+    init() { ... } i.e
+    struct Fahrenheit {
+      var temperature: Double
+      init() {
+        temperature = 32.0
+      }
+    }</pre></p>
+<p>You can set default property in initializer (as shown) or 
+   during declaration... 'var temperature = 32.0'.  You 
+   can also have parms for initialization.<pre>
+     struct Celsius {
+       var temperatureInCelsius: Double
+       init(fromFahrenheit fahrenheit: Double) {
+         temperatureInCelsius = (fahrenheit - 32.0) / 1.8
+       }
+       init(fromKelvin kelvin: Double) {
+         temperatureInCelsius = kelvin - 273.15
+       }
+     }</pre></p>
+<p>Because there's no 'func' infront of init, the
+   parameters play an important part in which init is called.
+   Because of this, swift provides an automatic argument
+   label even if you don't provide one.  If you had an
+   initializer 'init(white: Double) {...}'; where
+   argument list isn't specified it'll use the parameter
+   name for it; you can't call the initializer without
+   specifying the name so var someVar = Class(0.5) won't
+   pass the compiler, you have to do .. Class(white: 0.5).</p>
+<p>If you want to have no argument then you must
+   declare like 'init(_ white:  Double) {..}' so that it's
+   not ambiguous on which init to call when no argument
+   list is provided.</p>
+<p>If your type has an 'optional' then it doesn't have
+   to be set in initializer; it's automatically set
+   to nil (no value)</p>
+<p>You <strong>can assign constants</strong> during
+   init; note for classes they can only be set by that
+   class itself... not subclasses of it.</p>
+<p><strong>Default initializers</strong> if you don't
+   provide an init then swift will provide a 
+   default one for you, they just set the properties
+   to their default values.</p>
+<p>Memberwise initializers for structures: structs get
+   memberwise initializers if you don't define a custom
+   one.  Example, say you had struct<pre>
+     struct Size {
+       var width = 0.0, height = 0.0
+     }</pre>
+   This automatically creates a memberwise initializer
+   like 'init(width:height:)'.  You can then create
+   a struct like 'let me = Size(width: 2.1, height: 3.0)'</p>
+<p>An initializer can call other initializers to perform
+   part of the work.  This is known as initializer
+   delegation.  It's different for value types (structs
+   and enums) and class types.  Value types don't support
+   inheritance so their initializers are relatively simple, the
+   only delegation is within same object.  You need to
+   use self.init to refer to other initializers in the
+   same type, you can only call self.init from within
+   an initializer.</p>
+<p>For classes there are designated initializers and
+   convenience initializers. <strong>Designated</strong> are the primary
+   one, they init all properties and call the
+   appropriate superclasses initializer.  It's common
+   for a class to have only one designate initializer.
+   There format<pre>
+      init(parameters) { statements }</pre>
+   <strong>Convenience initalizers</strong> are secondary
+   they support initialers for a class, there format<pre>
+     convenience init(parameters) { statements }</pre>
+   Here's rules</p>
+<ol>
+  <li>A designated initializer must call a designated
+      initializer from it's superclass</li>
+  <li>A convenience initializer must call another 
+      initializer in the same class</li>
+  <li>A convenience initializer must ultimately
+      call a designated initializer</li>
+</ol>
+<p>To remember: a designated init delegates up, a
+   convenience init delegates accross</p>
+<p>Swift performs two phase class initialization,
+   in the first phase each stored property is assigned
+   a value, in second phase the class is given
+   opportunity to customize the stored properties</p>
+<p><strong>I stopped</strong> Initializer Inheritance 
+   and Overriding, pick up there </p>
+

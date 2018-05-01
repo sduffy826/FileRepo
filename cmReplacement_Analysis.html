@@ -1,0 +1,1699 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+
+<HTML>
+<HEAD>
+
+<style>
+body {
+  font-family: "Arial", "sans-serif";
+  font-size: small;
+}
+
+table, th, td {
+    vertical-align: top;
+    border: 1px solid black;
+    border-collapse: collapse;
+    padding: 5px;
+    font-size: small;
+}
+
+#modDate {
+	text-align: right;
+}
+
+.header1 { 
+     text-align: left; 
+     font-weight: bold;
+     background-color: grey;
+     color: white;
+}
+.header2 { 
+     text-align: left; 
+     font-weight: bold;
+     background-color: BurlyWood;
+     color: black;
+}
+.where {
+	background-color: #abebc6;
+}
+.joins {
+	background-color: #abebc6;
+}
+.important {      
+     color: red;
+}
+.mustChange {
+	background-color: red;
+	color: white;
+}
+.didChange {
+	color: purple;
+}
+
+
+
+.outputFormat { 
+     text-align: left; 
+     font-weight: bold;
+     background-color: grey;
+     color: white;
+}
+.inactive { 
+     color: LightGray;
+     font-style: italic;
+}
+.same { 
+     color: Olive;     
+}
+.num {
+	text-align: right;
+}
+.review {
+	background-color: DarkGreen;
+	color: yellow;
+}
+#section_IRP, #section_ComDoc, #section_FileRepository, #section_RMS, #section_MISC {
+  background-color: #ffcc66;
+  font-size: x-large;
+  padding: 12px;
+}
+#section_CodeCommon, #section_CodeRMS {
+  background-color: DarkOrange;
+  font-size: large;
+  padding: 10px;
+}
+.ClassGroup {
+	background-color: PeachPuff;
+}
+.FuncGroup {
+	background-color: Khaki;
+}
+.Program {
+	background-color: DarkSeaGreen;
+}
+.indentTab {
+	margin-left: 20px;
+	margin-bottom: 20px;
+}
+
+</style>
+	
+</HEAD>
+
+<body>
+<h3 id="modDate">April 25, 2018</h3>
+<p>Items in <span class="review">this color</span> need more review</p>
+<!-- ======================================================================================= -->
+<hr />
+<h3>Proposal</h3>
+
+<p>Instead of flipping switch and moving all documents to new repo we can migrate over time; this will
+   allow use to use content manager for some documents and store new documents in the new repository (note
+   this impacts eclient so need to consider that (maybe start with docs with visible outside sales N)).</p>
+
+<p>Thinking we have a table that maps old repository id/document id to the new repo id.  As apps requests a
+   document they pass in the old repo id/docid, we lookup in table and if find new repo id for it
+   we use that. </p>
+
+<p>Also thinking, we have common method (call MAP for ref) that maps repository id to new one, 
+  we could make it fancy and have it based
+   on date... thus we could say repo Z2 is mapped to repo Y1 from 01/01/2018->03/31/2018 and Y2
+   from 04/01/2018->12/31/9999.  Method would return original repo id if no mapping exists</p>
+
+<p>Before I have example, pretend we have a table (DOCMAP) with structure similar to (makes example
+   easier to understand)</p>
+<table>
+  <tr><td>oldCrepId</td><td>type: saeArchivI (char(2))</td></tr>
+  <tr><td>docId</td><td>type: saeArDoId (char(40))</td></tr>
+  <tr><td>newCrepId</td><td>type: saeArchivI (char(2))</td></tr>
+</table>
+
+<p>Examples to store/retrieve document</p>
+<ul>
+  <li>User wants to store document Z2 document; we use method (MAP) to find out if we should map that to a
+  new repo, lets say MAP returns Y1.  We store the new document in repo Y1 and put entry 
+  into the DOCMAP table with oldCrepId Z2, docId, newCrepId of Y1</li>
+  <li>User requests document from Z2 repo (they also give us the docId), we lookup in (DOCMAP)
+    table and see that it's actually in repo Y1, we return document to user by getting it from repo Y1</li>
+  <li>User wants to store document in ZS, we use MAP method, and don't see remap so we'll store it it
+    ZS, we store entry in DOCMAP; the oldCrepId and newCrepId both have ZS.</li>
+</ul>
+
+<!-- ======================================================================================= -->
+<hr />
+<h3>More on methods/routines needed (related to proposal logic)</h3>
+<table>
+  <tr class="header1">
+    <td colspan="2">Methods/routines needed for future</td>
+  </tr>
+
+  <tr>    
+    <td>Document creation</td>
+    <td>Call new method passing in the repository id, filename, attachment (various formats).  It
+        gets repo to store it in by calling MAP method, calls method/fm to store document in sap, 
+      updates DOCMAP table (need to handle replicate doc to external source - if applicable)</td>
+  </tr>
+  <tr>
+    <td>Document retrieval</td>
+    <td>Pass in the repository id, document id, call new method which looksup entry in DOCMAP to determine
+        which repository it's in; calls method to retrieve document</td>
+  </tr>
+  <tr>
+    <td>Document display</td>
+    <td>Pass in the repository id, document id, filename, we call the 'Document retrieval' routine to 
+        get the attachment; using filename we determine mimetype of file and call appropriate
+      routine to display the file.</td>
+  </tr>
+</table>
+
+<!-- ======================================================================================= -->
+<hr/>
+<h3>eClient replacement</h3>
+<ul>
+  <li>research where to store - suggest a local server (for control); box good for attachment but 
+  <ul>
+    <li>meta data is biggest piece of work in replacment (this will probably be irp web team work 
+        (to create web interface to search/display/download attachments (there shouldn't be 
+        any updates done here (at least at first pass))).  if not going to use web interface
+        to search meta data then need to size 'proposed' effort</li>
+    <li>we have more control on which docs we allow visibility too (limit in eclient today, and
+        would also be in box)</li>
+    <li>no concerns about storing federal, ffiec, hipa data</li>
+    <li>no dependency on external resource (application/server)</li>
+    <li>i'm sure it's cheaper than box</li>
+  </ul></li>
+  <li>replicate meta data to external source (can use datamart db's if refresh cycle ok)</li>
+  <li>need to create web interface to access documents; this should allow search on all the
+      meta data stored in sap (we need propogate those attributes on doc creation to web</li>
+</ul>
+
+<!-- ======================================================================================= -->
+<hr/>
+<h3>SAP location to store docs</h3>
+<li>assume cluster tables, is there a limitation on size of document stored in cluster table?</li>
+
+<!-- ======================================================================================= -->
+<hr/>
+<h3>Development objects</h3>
+<p>There's more info in the methods/routines section above; have separate section since
+   that talks to the 'proposal'.  <strong class="important">Note:</strong> you don't need to use
+   class zcl_ix_attachment as 'common methods' but at least look at it; has methods for 
+   create/get attachment and supports some different formats... maybe just needs some tweaking.</p>
+<ul>
+  <li>object to create, replace, delete, get attachments (the objects that create attachments
+      will need to call method to make corresponding change in external datasource (both
+      meta data and the attachment))</li>
+  <li>object to display attachment in ui (need more research to see where/how used in sap)</li>
+</ul>
+
+<!-- ======================================================================================= -->
+<hr/>
+<h3>Need to do analysis on how docs attached/accessed in</h3>
+<ul>
+  <li><a href="#section_IRP">IRP</a></li>
+  <li><a href="#section_ComDoc">ComDoc</a></li>
+  <li><a href="#section_FileRepository">File repository</a></li>
+  <li><a href="#section_RMS">RMS</a></li>
+  <li><a href="#section_MISC">Miscellaneous Usage</a></li>
+</ul>
+
+<h3>Additional Items</h3>
+<ul>
+  <li class="review">Identify usage/significance of container id</li>
+  <ul><li>So far container id appears to be used to group contracts to the container... i.e. if
+  	      container id is the same accross documents then the contracts are common across them; 
+  	      this appears to be done with table zix_doc_attcon; though that table has column docid
+  	    it's value is really the container id</li></ul>
+</ul>
+
+
+
+<!-- ============================================== SECTION: IRP ============================================== -->
+<hr/>
+<h3 id="section_IRP">IRP Analysis</h3>
+<table>
+  <tr class="header1">
+    <td colspan="4">Web IRP Actions that affect document attachments</td>
+  </tr>
+  <tr class="header1">
+    <td colspan="4">All function sbelow are handled via call to function module Z_IX_IRP_PROCESS_ACTION 
+                    in function group zix_irp_documents</td>
+  </tr>
+  <tr class="header2">
+    <td>Function Code</td>
+    <td>Desc</td>
+    <td>Form with FG</td>
+    <td>Logic</td>
+  </tr>
+  <tr>
+    <td>UPATT</td>
+    <td>Create new document</td>
+    <td>Create</td>
+    <td>Calls method zcl_ix_irp_document_factory=&gt;create_document (docid/version are initial)</td>
+  </tr>
+  <tr>
+    <td>NVATT</td>
+    <td>New version of existing document</td>
+    <td>NewVersion</td>
+    <td>Calls method zcl_ix_irp_document_factory=&gt;create_document (docid not initial, version is initial)</td>
+  </tr>
+  <tr>
+    <td>DEATT</td>
+    <td>Delete Attachment</td>
+    <td>Delete</td>
+    <td>Calls method zcl_ix_irp_document-&gt;deleteDocument</td>
+  </tr>
+  <tr>
+    <td>DNATT</td>
+    <td>Download Attachment</td>
+    <td>Download</td>
+    <td>Calls method zcl_ix_attachment=&gt;getAttachmentAsXString passes crep_id = 'Z2', filename, docid, get back attachment as xString</td>
+  </tr>
+</table>
+
+<p>Detail</p>
+<table>
+  <tr class="header1">
+    <td colspan="2">Method descriptions</td>
+  </tr>
+  <tr class="header2">    
+    <td>Method/Action</td>
+    <td>Description</td>
+  </tr>
+  <tr>
+    <td>zcl_ix_irp_document_factory=&gt;create_document / UPATT</td>
+    <td><ul>
+           <li>fyi: the method call is passed 'processObject' which is a reference to class
+              zcl_ix_irp_process_attributes; that object has all the properties
+              related to the document being processed.  The docid/version attributes 
+              determine logic in constructor (for UPATT action they're 'initial')</li>
+           <li>The create_document method instantiates an object of type zcl_ix_irp_document</li>
+           <li>The zcl_ix_irp_document constructor calls method
+             <ul>
+               <li>createNewDocument if docid/version are initial (action UPATT)</li>
+               <li class="inactive">createNewVersion if docid is not initial but version is (here for ref)</li>
+               <li class="inactive">initDocumentOnFile if docid/version are both not initial (here for ref)</li>
+             </ul></li>
+           <li>zcl_ix_irp_document->createNewDocument use the 'processObject' argument to get attributes,
+               ('attachment' is attribute name, it's type xstring); it calls 
+               zcl_ix_attachment=>createAttachmentFromXString to store attachment; it has
+               logic to update other tables (i.e zix_documents/linker tables)</li>
+          <li>zcl_ix_attachment=>createAttachmentFromXString is passed the crepId (repo Id),
+              filename, and attachment; it:
+              <ul>
+                <li>converts the xString value to a binary table (type iwp_t_tbl1024)
+                    by calling zcl_ix_attachment=>convertXStringToBinTab</li>
+                <li>it then calls zcl_ix_attachment=>createAttachment, passing in crepId, 
+                    filename and binary attachment.  That method (described below) returns
+                    the docid for the doc id created (which this method passes back to the caller)</li>
+              </ul>
+          </li>
+          <li>zcl_ix_attachment=>createAttachment (gets args of crepId, filename, binary attachment)
+            <ul>
+              <li>Gets the mime type based on the filename passed in</li>
+              <li>Calls function module scms_http_create_table to create the document</li>
+            </ul>
+            <strong class="mustChange">Change</strong> this method should be changed so that we
+              don't call scms_http_create_table; see proposal</li>
+        </ul>
+    </td>
+  </tr>
+
+  <tr>
+    <td>zcl_ix_irp_document_factory=&gt;create_document / NVATT</td>
+    <td><ul>
+           <li>Logic here very similar to UPATT, to make it clear I have the code that's the
+             <span class="same">same</span> identified in a different color</li>
+
+           <li>here in the 'processObject' attributes, the docid has docid of document based on and
+               the version is initial.</li>
+           <li class="same">The create_document method instantiates an object of type zcl_ix_irp_document</li>
+           <li>The zcl_ix_irp_document constructor calls method
+             <ul>
+               <li class="inactive">createNewDocument if docid/version are initial (action UPATT) (here for ref)</li>
+               <li>createNewVersion when docid is not initial but version is</li>
+               <li class="inactive">initDocumentOnFile if docid/version are both not initial (here for ref)</li>
+             </ul></li>
+           <li>zcl_ix_irp_document->createNewVersion uses attributes from the document on file, and
+               the 'processObject' argument to set attributes, it calls
+               zcl_ix_attachment=>createAttachmentFromXString to store the attachment.  It
+               also has logic to update other tables (i.e. zix_documents/linker).</li>
+          <li class="same">zcl_ix_attachment=>createAttachmentFromXString is passed the crepId (repo Id),
+              filename, and attachment; it:
+              <ul>
+                <li class="same">converts the xString value to a binary table (type iwp_t_tbl1024)
+                    by calling zcl_ix_attachment=>convertXStringToBinTab</li>
+                <li class="same">it then calls zcl_ix_attachment=>createAttachment, passing in crepId, 
+                    filename and binary attachment.  That method (described below) returns
+                    the docid for the doc id created (which this method passes back to the caller)</li>
+              </ul>
+          </li>
+          <li class="same">zcl_ix_attachment=>createAttachment (gets args of crepId, filename, binary attachment)
+            <ul>
+              <li class="same">Gets the mime type based on the filename passed in</li>
+              <li class="same">Calls function module scms_http_create_table to create the document</li>
+            </ul>
+            <strong class="mustChange">Change</strong> this method should be changed so that we
+              don't call scms_http_create_table; see proposal</li>
+        </ul>
+    </td>
+  </tr>
+
+  <tr>
+    <td>zcl_ix_irp_document-&gt;deleteDocument / DEATT</td>
+    <td><ul>
+           <li>Note: documents are not physically deleted here, they are marked
+               for deletion <span class="important">check for a batch process that
+               physically deletes attachments</span></li>
+           <li>When deleteDocument is called it's passed the person key of the user,
+               the new document status, the new document state (these two from config table
+               zix_irp_doc_act), the standard 'process object' is also passed (that
+               has attributes, including comments).</li>
+           <li>The method updates the record in zix_documents by setting the deleted flag
+               on (X), date deleted, deleted by (person key).  It updates the doc state
+               in zix_irp_doc_map and also calls function to update linker tables
+               (Z_IX_PROCESS_TOA01).  <span class="important">Should check (and
+               potentially change) z_ix_process_toa0n; only needs to propogate
+               data for CM related docs</span> <br/>
+               Lastly, method calls routine to track chg and to process comment</li>
+        </ul>
+    </td>
+  </tr>
+
+<tr>
+    <td>zcl_ix_attachment=&gt;getAttachmentAsXString / DNATT</td>
+    <td><ul>
+           <li>When method is called (from fm z_ix_irp_process_action) it is passed in:
+               crep_id = 'Z2', filename, docid, it is returned the attachment as xString.</li>
+
+           <li>This method calls local method getAttachment, it's passed the same input parms;
+               the return parms are: attachment as a binary table (type iwp_t_tbl1024) and
+               attachmentLength returned as a num12 field.  Once getAttachment returns it then
+               calls local method convertBinTabToXString to convert the binary table to xstring
+            <ul>
+              <li>method zcl_ix_attachment=>getAttachment logic</li>
+                <ul>
+                  <li>Note this method has additional return parms of _archiveObject and 
+                      _archiveObjectLength but they aren't used when called from getAttachmentAsXString</li>
+                  <li>This calls method zcl_ix_documents_utilities=>getMimeTypeForFile passing
+                      in the filename, it's returned mime type</li>
+                  <li>It uses mime type, crep_id and docid and calls function ARCHIVEOBJECT_GET_TABLE.
+                      That function returns the binary object (type iwp_t_tbl1024) its length, the fm
+                      also returns the parms we don't use on this path (archivObject and length).
+                      <span class="mustChange">call to ARCHIVEOBJECT_GET_TABLE will probably need to be 
+                      changed</span></li>
+                </ul>
+               <li>method zcl_ix_attachment=>convertBinTabToXString logic</li>
+                 <ul>
+                    <li>It's passed in the binary table of data (type iwp_t_tbl1024) and it's length (optional)</li>
+                    <li>If the length wasn't provided then the code calculates it</li>
+                    <li>It calls sap function SCMS_BINARY_TO_XSTRING to convert the table to xstring</li>
+                 </ul>
+           </ul></li>
+        </ul>
+    </td>
+  </tr>
+</table>
+
+
+
+<!-- ============================================== SECTION: COMDOC =========================================== -->
+<hr/>
+<h3 id="section_ComDoc">ComDoc</h3>
+<p>Really geared towared documents related to registered contracts.  Accessible from
+  <ul>
+    <li><a href="#trans$zix_customer">Customer search</a> (trans: zix_customer, pgm: zix_customer_search2)</li>
+    <li><a href="#trans$zix_event_search">Event search</a>
+        (trans: zix_event_search, pgm: zix_event_search_wrapper)</li>
+    <li><a href="#trans$zix_doc_search">Document search</a> (trans: zix_doc_search, pgm: zix_doc_search_grp)</li>    
+  </ul>
+There is a lot of common code between file repository and comdoc.</p>
+<p>Detail for each section</p>
+
+
+
+<!-- ============================================== TRANSACTION: ZIX_CUSTOMER ================================= -->
+<hr />
+<h4 id="trans$zix_customer">Customer search (zix_customer)</h4>
+<ul>
+  <li>Search results screen - Documents button at top</li>
+  <ul>
+  	<li>When user clicks button it calls subroutine 'add_docs_functions'
+  		  to put up options available.  The values are:
+			<table>
+			  <tr><td colspan="2">Attach Document [DOCCR]</td>
+            <td>Depending on column in (COMPANY, CONTRACT or REVISION) it 
+            	  calls function <a href="#z_iv_documents_attach_file">
+            	  z_iv_documents_attach_file</a> passing object            	  
+            	  type/object value (caller_id=C) and also
+            	  bunch of additiona (obvious) parms</td>
+			  </tr>
+			  <tr><td colspan="2">Set Default Attributes [DOCATTR]</td>
+			  	<td>Calls function <a href="#z_ix_comdoc_attributes">z_ix_comdoc_attributes</a> 
+			  	    (passes mode of 'S' (for setting))</td>
+			  </tr>
+			  <tr><td colspan="2">Search</td><td>All searches below use the column in
+			      to determine search criteria, they then call program
+			      <a href="#zix_doc_search_grp">zix_doc_search_grp</a> and will group data
+			      by the column below</td></tr>
+			  <tr><td></td><td>View by Attachment (MITRS) [SEARCH_ATT]</td>
+			  	  <td>group by attachment</td>
+			  </tr>
+			  <tr><td></td><td>View by Contract [SEARCH_CON]</td><td>Contract</td></tr>
+			  <tr><td></td><td>View by Creator [SEARCH_CRE]</td><td>Creator</td></tr>
+			  <tr><td></td><td>View by Company [SEARCH_CUS]</td><td>Company</td></tr>
+			  <tr><td></td><td>View by Owner [SEARCH_OWN]</td><td>Owner</td></tr>
+			  <tr><td></td><td>View by Sites [SEARCH_SIT]</td><td>Site</td></tr>
+			  <tr><td></td><td>View by Work Order [SEARCH_WOR]</td><td>Work order</td></tr>
+			  <tr><td colspan="2">Search with Attributes [DOCSA]</td>
+			  	  <td>Executes program 
+			  	  	  <a href="#zix_doc_search_grp">zix_doc_search_grp</a> depending
+			  	  	  on column in (COMPANY NAME or CONTRACT)</td>
+			  </tr>
+			</table>
+  	</li>
+  </ul>
+</ul>
+
+
+
+<!-- ============================================== TRANSACTION: ZIX_EVENT_SEARCH ============================= -->
+<hr />
+<h4 id="trans$zix_event_search">Event search (zix_event_search)</h4>
+<p>Transaction is zix_event_search, that executes program zix_event_search_wrapper which is just
+	 a little wrapper to see if event manager is available or not, if it is it executes program
+	 zix_event_search.  That program doesn't display the search results; it uses function module.
+	 <strong>z_iv_sd_events</strong> to do that.  That function is in group ziv_sd_events; it
+	 has the logic below.<br/>
+	 The menu options are defined in include lziv_sd_eventsp01.</p>
+<ul>
+  <li>Search results screen - Documents button at top</li>
+	<table>
+	  <tr><td>Attach Document [DOCATTACH]</td>
+        <td>It does following
+         	<ul>
+         		<li>Calls for get_company (gets group code from zix_object_links (search by contract))</li>
+         		<li>Calls form chk_event_type (if event matches contant 'SD_NOATTACH_EVENTTYPE' then can't attach docs)</li>
+         		<li>Potentially calls chk_for_active (if doesn't 'ACTIVE' record in zii_event_indexselect for any event will
+         			  put up a popup asking if should continue <span="important">Makes no sense, any event</span>)</li>
+         		<li>Calls get_early_start_date (calls fm Z_IV_GET_EARLIEST_START_DATE to get earlies start date under this wo)</li>
+         		<li>Calls get_sign_date (gets sign date from vbak)</li>
+         		<li>Calls function <a href="#z_iv_documents_attach_file">
+         			  z_iv_documents_attach_file</a>.  It passes following parms
+         			  <ul>
+         			  	<li>cdg_object_type &lt;-- 'COMPANY'</li>
+            	  	<li>cdg_object_value &lt;-- thecompany</li>
+            	  	<li>caller_id  &lt;-- 'E'</li>
+            	  	<li>workorder &lt;-- wo_char12</li>
+            	  	<li>contract &lt;-- theevent-contract</li>
+            	  	<li>contract_signed_date &lt;-- contract_sign</li>
+            	  	<li>event_start_date &lt;-- first_date</li>      
+         			  </ul>
+         		</li>
+         	</ul>
+        </td>
+	  </tr>
+	  <tr><td>Set Default Attributes [DOCATTR]</td>
+		   	<td>Calls function <a href="#z_ix_comdoc_attributes">z_ix_comdoc_attributes</a> 
+			  	    (passes mode of 'S' (for setting))</td>
+		</tr>
+		<tr><td>Search by Work Order [DOCWO]</td>
+			  <td>Method handle_user_command (in lziv_sd_eventsp01) it adds the workorder
+			      to a range table and it executes program
+			      <a href="#zix_doc_search_grp">zix_doc_search_grp</a></td>
+		</tr>
+  </table>
+</ul>
+
+
+<!-- ============================================== TRANSACTION: ZIX_DOC_SEARCH =============================== -->
+<hr />
+<h4 id="trans$zix_doc_search">Document Search (zix_doc_search)</h4>
+
+<p>Transaction is zix_doc_search allows user to search for documents; they
+	 are the documents predominently related to contracts.  The code behind
+	 the scenes is in program <a href="#zix_doc_search_grp">zix_doc_search_grp</a>;
+	 the transaction calls screen 1000 within that program.<br />
+	 Use the link to see more details on it.</p>
+
+
+<!-- ============================================== SECTION: FILE REPOSITORY ================================== -->
+<hr/>
+<h3 id="section_FileRepository">File Repository</h3>
+<p>Really geared towared proposal documents</p>
+<ul>
+	<li id="zix_salesdoc_search">Sales document search (transaction: zix_salesdoc_search,
+	   program: zix_salesdoc_search, screen 1000).  From the search results screen the following 
+	   options are (brackets have [fcode])
+     <table class="indentTab">
+	     <tr><td>Open [OPEN]</td>
+	     	   <td>Calls form 'open' which calls function <a href="#z_iv_cm_display">
+	     	       z_iv_cm_display</a>, passing in the 
+	     	       docid, this launches the document (i.e. opens it).</td></tr>
+	     <tr><td>Change [EDIT]</td>
+	     	   <td>Calls form 'edit' which calls function <a href="#z_iv_edit_doc">
+	     	   	   z_iv_edit_doc</a>, passing in the 
+	     	       docid, if upon return it has a new docid then it will call form update 
+	     	       attributes with the new/old docid's (note the new docid is created in call 
+	     	       to z_iv_edit_doc)</td></tr>
+	     <tr><td>Replace [REPLACE]</td>
+	     	   <td>Calls form 'replace' I won't put all detail but it does:
+	     	   	  <ul>
+	     	   	  	<li>Checks that the user is authorized</li>
+	     	   	  	<li>Prompts for file to replace with
+	     	   	  	   (cl_gui_frontend_services=>file_open_dialog)</li>
+                <li>Calls form replace_doc
+	     	   	  		 <ul>
+	     	   	  		 	  <li>It builds ziv_prop_docs_record based on old record</li>
+	     	   	  		 	  <li><span class="important">calls split_path in oaall (change this)</span>
+	     	   	  		 	  	  to split path/name into path and filename</li>
+	     	   	  		 	  <li>Determines file extension (form get_file_extension)</li>
+	     	   	  		 	  <li>Calls function <a href="#alink_documents_create_dialog">
+	     	   	  		 	  	 alink_documents_create_dialog</a> to save the document
+	     	   	  		 	  	 in the content repo</li>
+	     	   	  		 	  <li>Inserts new record in ziv_prop_docs</li>
+	     	   	  		 	  <li>Calls function <a href="#z_ix_process_toa03">
+	     	   	  		 	      z_ix_process_toa03</a> to sync toa03 with ziv_prop_docs</li>
+	     	   	  		 	  <li>Deletes old record from ziv_prop_docs and calls function
+	     	   	  		 	  	  z_ix_process_toa03 so that it's deleted from linker also</li>
+	     	   	  		 </ul>
+	     	   	  	</li>
+	     	   	  	<li>Asks user if wants to update attributes, if yes then will
+	     	   	  		  call function <a href="#z_ix_comdoc_attributes">
+	     	   	  		  z_ix_comdoc_attributes</a>.  It will update ziv_prop_docs and
+	     	   	  		  call function to update linker table again (if necessary)</li>
+	     	   	  </ul>
+	     	   </td></tr>
+	     <tr><td>Detach [DETACH]</td>
+	     	   <td>calls form 'export' it in turn 
+	     	   	   calls form <a href="#zix_doc_content_manager$export">Export</a>
+	     	   	   in program zix_doc_content_manager, that routines handles
+	     	   	 exporting the file to the local file system</td></tr>
+	     <tr><td>Delete [DELETE]</td>
+	     	   <td>Calls form 'Delete', that sets the delete flag in ziv_prop_docs and toa03</td></tr>
+ 	     <tr><td>UnDelete [UNDELETE]</td>
+	     	   <td>Calls form 'undelete' which clears the delete flag in ziv_prop_docs and toa03</td></tr>
+	     <tr><td>Attributes [DISPLAY]</td>
+	     	   <td>calls function <a href="#z_ix_comdoc_attributes">z_ix_comdoc_attributes</a>
+	     	       passes in mode of 'D' (display), and parms that identify the document; 
+	     	       the 'Action' returned from that fm call triggers:
+	     	   <dl>
+	     	     	<dt>'A' (for add/update)</dt>
+	     	   	    <dd>It updates the attributes in ziv_prop_docs, zix_doc_main and toa03</dd>
+	     	     	<dt>'D' (for delete)</dt>
+	     	   	    <dd>if they 'Delete' then the delete flag is set in ziv_prop_docs and toa03</dd>
+	     	     	<dt>'U' (for undelete)</dt>
+	     	   	    <dd>if they 'Undelete' the delete flag is turned off</dd>
+	     	   	  <dt>'E' (for export)</dt>
+	     	   	    <dd>if they 'Export' then local export form is called which in turn 
+	     	   	    	  calls form <a href="#zix_doc_content_manager$export">Export</a>
+	     	   	    	  in program zix_doc_content_manager, that routine handles logic
+	     	   	    	to export file to local file system.</dd>
+	     	     	<dt>'O' (for open)</dt>
+	     	     	  <dd>If they 'Open' the file it calls function 
+	     	     	  	  <a href="#z_iv_cm_display">z_iv_cm_display</a></dd>
+	     	    </dl>
+   	        </td></tr>
+	     <tr><td>History [HISTORY]</td>
+	     	   <td>It calls function <a href="#z_ix_read_and_display_changes">
+	     	   	   z_ix_read_and_display_changes</a></td></tr>
+		 </table>
+	</li>
+
+  
+	<li>From <strong>transaction ziv_sales</strong>, after executing search you're
+		  presented with search results list, from there you can use the detail menu
+		  option to go into (for ref, the code for this is in the process_user_command
+		  of program zix_solution_f03_cc)
+		 <ul>
+		 	  <li>File repository (fcode: FILE_REP_COMP)
+		 	  	<ul>
+		 	  	 	 <li>When you select this menu option the code
+		 	  	 	 	   executes function module
+		 	  	 	 	   pulldown you will execute function
+		 	  	 	 	   <a href="#z_iv_documents_find_file">z_iv_documents_find_file</a>
+		 	  	 	 	   (passes args, type 'PROPOSAL_SAP', value vbeln, caller_id 'S'
+		 	  	 	 	    and title of ).  That function handles everything
+		 	  	 	 </li>
+		 	  	 </ul>
+		 	  </li>
+		 	  <li>Proposal 
+		 	  	 <ul>
+		 	  	 	  <li>The proposal can be accessed in display or change mode, the
+		 	  	 	  	  both call function module <a href="#z_iv_sd_goto_portal">
+		 	  	 	  	  z_iv_sd_goto_portal</a> to do that.  This function module
+		 	  	 	  	  brings the user into the sales portal for the particular
+		 	  	 	  	  proposal.<br/>
+		 	  	 	  	  When in the proposal (assume change mode) you can select the
+		 	  	 	  	  File Repository menu option on the left.  When you click it
+		 	  	 	  	  you will execute screen 0900 in program
+		 	  	 	  	  <a href="#ziv_sd_portal_doc_tab">ziv_sd_portal_doc_tab</a></li>
+		 	  	 </ul>
+		 	  </li>
+		 </ul>		
+  </li>
+</ul>
+
+
+
+
+<!-- ============================================== SECTION: RMS ============================================== -->
+<hr/>
+<h3 id="section_RMS">RMS - Request Management System</h3>
+<p>Handles request for capital and expense expenditures (i.e. buying equipment).  This is not documentation
+	 about RMS; it was geard toward finding out how attachments are handled in it.</p>
+<ul>
+	<li>Transaction <strong>zix_req</strong> (pgm sapmzixwb screen 9100) brings user into search screen</li>
+	  <ul>
+	  	<li>Search calls fm <strong>z_ix_wb_request_results</strong> to display results in alv screen.  that fm
+	  		  is in function group zix_investment_request.  The lcl_event_receiver->handle_user_command handles
+	  		   most of the actions in alv.  Below are the function codes:</li>
+	  	<dl>
+	  		<dt>DISPLAY, CHANGE or RENEW</dt>
+	  		  <dd>Calls function <a href="#z_ix_wb_request_ui_detail">z_ix_wb_request_ui_detail</a>
+	  		      (same FG), the argument 'act_ind' identifies if it's a 
+	      	    change (M), display (D) or renew (R) request.  That fm puts up
+	      	    the detail screen (more in link).</dd>	      
+	      <dt>DELETE</dt>
+	        <dd>Does not appear to do anything with attachments <span class="important">Verify this 
+	        	  with testing</span>.  It deletes records from following tables:
+	        	  zix_wb_req_detl, zix_wb_contractr, zix_wb_multisite and zix_wb_contracts</dd>
+	      <dt>ADD_ATTACH</dt>
+	        <dd>calls form 
+	        	   <a href="#zix_investment_request$process_attachment">process_attachment</a>
+	        	   (in zix_investment_request fg), it passes a flag to indicate ('C') to indicate it wants to create
+	             an attachment</dd>
+	    </dl>
+	  </ul>
+</ul>
+
+<h4>Misc info</h4>
+<p>Attachment attributes are stored in table toa02
+    The process attachments form creates an object (z_ix_attachments), that object calls
+</p>
+
+<hr />
+<h3 id="section_CodeRMS">Description of RMS routines (think only used in rms so not in common sect)</h3>
+<table>
+  <!-- ============================================== FG: ZIX_INVESTMENT_REQUEST ====================== -->
+	<tr>	
+	  <td class="FuncGroup" colspan="3" id="zix_investment_request">Function Group 
+	  	  <strong>zix_investment_request</strong></td>	
+	</tr>
+	<tr>
+		<td></td>
+		<td id="zix_investment_request$process_attachment">Form <strong>process_attachments</strong></td>
+		<td>Form is passed indicator of 'C' for create or 'D' for display.  For both parms it creates
+		    an object of type z_ix_attachments, for create it:
+		    <ul>
+		    	<li>Calls form get_next_number, that form calls 
+		    		  fm <strong>number_get_next</strong> with nr_range_nr = 'A', object 'ZIX_REQ' and
+		    		  quantity of 1; that returns the next sequential nubmer to use.
+		    		  It uses that number for: zix_wb_req_detl-sap_request_num.</li>
+          <li>Calls method <a href="#z_ix_attachments$attachment_create">attachment_create</a></li>
+        </ul>
+        For display it calls:
+        <ul>
+        	<li>method <a href="#z_ix_attachments$attachment_list">attachment_list</a>, if the user
+        	    can replace attachment the activity_type is 3 otherwise it passes a 1 (for disp).</li>
+        </ul>
+      </td>
+  </tr>
+  <tr>
+  	<td></td>
+    <td id="z_ix_wb_request_ui_detail">Function <strong>z_ix_wb_request_ui_detail</strong></td>
+		<td>Form is passed indicator of 'C' for create or 'D' for display.  For both parms it creates
+		    an object of type z_ix_attachments, for create it calls method 
+		    <a href="#z_ix_attachments$attachment_create">attachment_create</a> and for display it calls method
+		    <a href="#z_ix_attachments$attachment_list">attachment_list</a></td>
+  </tr>
+
+
+  <tr>	
+	  <td class="FuncGroup" colspan="3" id="zix_utilities_internal">Function Group 
+	  	  <strong>zix_utilities_internal</strong></td>	
+	</tr>
+	<tr>
+		<td></td>
+		<td id="z_ix_update_link_table">Function module <strong>z_ix_update_link_table</strong></td>
+		<td>This fm is passed is passed in a record (type toa02), it just updates the toa02 table
+			  with it (i.e. modify toa02 from wa)</td>
+	</tr>
+	<tr>
+		<td></td>
+		<td id="z_ix_display_attach_list">Function module <strong>z_ix_display_attach_list</strong></td>
+		<td>This presents a dialog with the attachment list in it, the user can perform the following
+		    actions from here (handled in form: process_ok_code).  Note: when the user creates/deletes
+		    attachments it doesn't update the tables until the user closes the dialog box; that's the
+		    point at which it executes the 'CONTINUE' function code.  Also note... the user can
+		    double click on an attachment; it executes the same logic as fcode DISPLAY (so didn't
+		    document separatly).
+		    <table>
+		    	<tr>
+		    		<td>CONTINUE (When done with list)</td>
+		    	  <td>This is executed after the user is done with the list... it appears that
+		    	  	  changes aren't made till this executes; it calls form 'finish_processing'.<br/>
+               <ul>
+                 <li>It loops thru table it_del_toa02 (delete requests)
+                 	  <ul>
+                 	  	 <li>If filename is in table of attachments to create (it_temp_file) it will
+                 	  	 	   remove the entry from it_temp_file</li>
+                 	  	 <li>Calls function <a href="#z_ix_delete_link_table">z_ix_delete_link_table</a>
+                 	  	 	   to handle delete logic (see below)</li>
+                 	  </ul>
+                 </li>
+                 <li>It now loops thru table it_temp_file (create requests)
+                 	  <ul>
+                 	  	<li>calls method <a href="#z_ix_attachments$attachment_create">attachment_create</a>
+                 	  	    to handle 'create' logic (see link for more)</li>
+                 	  </ul>
+                 </li>
+               </ul>
+		    	  </td>
+		    	</tr>
+		    	<tr>
+		    		<td>CREATE</td>
+		    	  <td>
+		    	  	<ul>
+		    	  		<li>Calls cl_gui_frontend_services=>file_open_dialog to prompt for file</li>
+		    	  		<li>Parses path/name with method z_ix_utilities=>parse_path_filename</li>
+		    	  		<li>Gets file size with cl_gui_frontend_services=>file_get_size</li>
+		    	  		<li>Checks that filesize doesn't exceed max allowed</li>
+		    	  		<li>Appends workarea onto it_toa02 in the object that was passed in.  It
+		    	  			  also updates table it_temp_file with the path and name of file to 
+		    	  			  be created.
+		    	  			  <strong>Note:</strong> the attachment won't be created till later, when
+		    	          the user closes dialog and it executes code in 'CONTINUE' fcode
+		    	  		</li>
+		    	  	</ul>
+		    	  </td>
+		    	</tr>
+		    	<tr>
+		    	  <td>DISPLAY</td>
+		    	  <td>Calls form 'display' that does following:
+		    	  	<ul>
+		    	  		<li>Some misc setup..</li>
+		    	  		<li>calls method cl_gui_frontend_services=>get_sapgui_workdir, that will set
+		    	  		      the sap working directory into variable 'sapWorkDir'</li>
+		    	  		<li>calls method cl_gui_frontend_services=>get_file_separator
+		    	  			    that will put the file separator into variable 'l_file_separator'</li>
+		    	  	  <li>creates variable 'file_path_name' to be the sapWorkDir + separator + fileName</li>
+		    	  	  <li>checks that file doesn't exist (uses form check_for_overwrite), will allow
+		    	  	  	  user to select to overwrite</li>
+		    	  	  <li>calls function <a href="#scms_ao_file_get_fe">scms_ao_file_get_fe</a> to
+		    	  	  	  retrieve file and write it to 'file_path_name' <span class="mustChange">
+		    	  	  	  Change this call</span></li>
+		    	  	  <li>calls method cl_gui_frontend_services=>execute, passing in 'file_path_name', this
+		    	  	  	  will launch the application that handles that type of file</li>
+		    	  	</ul>
+		    	  </td>
+		    	</tr>
+
+		    	<tr>
+            <td>DELETE</td>
+		    	  <td>It prompts the user to confirm the delete, if they want
+		    	  	 to delete then it'll write the record to table it_del_toa02 (that has
+		    	  	 record from toa02), <span class="important">think potential problem here
+		    	  	 as it_del_toa02 is a function group variable, can test with two 
+		    	  	separate session</span>.  It also removes the record from the alv
+		    	    grid.<br/>
+		    	    <strong>Note:</strong> the records won't be deleted till later, when
+		    	    the user closes dialog and it executes code in 'CONTINUE' fcode.</td>
+		    	</tr>
+
+          <tr>
+		    	  <td>DETACH</td>
+		    	  <td>It calls form 'detach_file', that does:
+		    	    <ul>
+		    	      <li>Prompts for path to store file in (form get_local_path)</li>
+		    	      <li>Calls fm <strong>ws_query</strong> to make sure directory/path exists</li>
+		    	      <li>Checks for overwrite: that calls form check_for_overwrite; it uses
+		    	      	  fm <strong>ws_query</strong> again, this time checking to see if the
+		    	      	  file exists.  If file exists use is prompted to overwrite, if they don't
+		    	      	  want to overwrite processing stops</li>
+		    	      <li>Next it calls <a href="#scms_ao_file_get_fe">scms_ao_file_get_fe</a> to retrieve
+		    	  	      document and store it at location user specified (name matches the name
+		    	  	      in sap).  <span class="mustChange">This needs to be changed</span></li>
+		    	  	</ul>
+		    	  </td>		    	  
+		      </tr>
+
+		    </table>
+		</td>
+	</tr>
+  <tr>
+		<td></td>
+		<td id="z_ix_delete_link_table">Function module <strong>z_ix_delete_link_table</strong></td>
+		<td>This fm is passed the workarea for the record to be deleted, the work area has the
+		    'deleted' attributes set (deleted flag, date deleted etc...).  It does:
+      <ul>
+      	<li>Calls fm <a href="#archiv_delete_meta">archiv_delete_meta</a> to physically remove
+      		  the attachment from the content repository.  <span class="mustChange">This needs
+      		  to be changed</span></li>
+      	<li>Updates the toa02 table with the work area passed in (remember deleted attributes are
+      		  on in the work area)</li>
+      </ul>
+		</td>
+	</tr>
+	
+
+
+
+  <tr>	
+	  <td class="ClassGroup" colspan="3" id="z_ix_attachments">Class <strong>z_ix_attachments</strong></td>	
+	</tr>
+	<tr>
+		<td></td>
+		<td id="z_ix_attachments$attachment_create">Method <strong>attachment_create</strong></td>
+    <td>
+    	  <ul>
+    	  	<li>If this is called without a filename it'll prompt the user for one 
+    	  		  (cl_gui_frontend_services=>file_open_dialog).</li>
+    	    <li>Calls method z_ix_utilities=>parse_path_filename to split fileAndPath into path and filename</li>
+    	    <li>Calls method cl_gui_frontend_services=>file_get_size to get file size</li>
+    	    <li>Checks that file size doesn't exceed maximum; constant ATTACHMENT_MAXSIZE has what 
+    	        the max allowable size is (if exceeds size writes msg and stops processing).</li>
+    	  	<li>Calls <a href="#alink_documents_create_dialog">alink_documents_create_dialog</a>
+              with args:<br/>
+              exporting: archiv_id ('ZX'), document_type('ZIX_ANY'), filename (filename, i.e. 'C:\test.txt'),<br/>
+              tables: outdoctab (we pass an empty table of type toadt)<br/>
+              changing: infiletab (we pass an empty table, type table of file_table)<br/>
+              On return both outdoctab and infiletab have data, the document id is in it_outdoctab[1]-arc_doc_id, 
+              the reserve field (in toa02) gets it_outdoctab[1]-doc_class.
+              <br/><span class="mustChange">This needs to be changed so doesn't call fm</span></li>
+          <li>Uses data returned from above and builds work record, then calls function 
+              <strong>z_ix_update_link_table</strong> to update tos02 table.</li>
+    	  </ul>
+    </td>
+  </tr>
+
+  <tr>
+		<td></td>
+		<td id="z_ix_attachments$attachment_list">Method <strong>attachment_list</strong></td>
+		<td>This calls function module <a href="#z_ix_display_attach_list">z_ix_display_attach_list</a>, it
+		    passes in a reference to itself in variable 'o_attachments'.</td>
+  </tr>
+
+</table>  
+
+
+
+class="review">General 'where used' search
+
+
+
+
+
+
+<!-- ============================================== SECTION: RMS ============================================== -->
+<hr/>
+<h3 id="section_MISC">Miscellaneous Usage</h3>
+<p>This section is for miscellaneous attachment usage/references.</p>
+<table>
+  <tr>
+  	<td class="review">Batch program - zix_doc_delete</td>
+  	  <td>This program is run as a batch program under job name <strong>zi_xd_zix_doc_delete</strong>.  
+  	  </td>
+  </tr>
+
+  <tr>
+  	<td class="review">RDWS - Attach</td>
+  	  <td>Put desc</td>
+</table>	
+
+
+
+<!-- ************************************************************************************************** -->
+<!-- ******************************** C o m m o n   R o u t i n e s *********************************** -->
+<!-- ************************************************************************************************** -->
+<hr />
+<h3 id="section_CodeCommon">Description of common routines</h3>
+<table>
+
+	<!-- ============================================== FG: ZIX_DOCUMENTS =============================== -->
+	<tr>	
+	  <td class="FuncGroup" colspan="3" id="zix_documents">Function Group <strong>zix_documents</strong></td>	
+	</tr>
+	<tr>
+		<td></td>
+		<td id="z_iv_documents_attach_file">z_iv_documents_attach_file</td>
+		  <td>
+        <ul>
+        	<li>The 'caller_id' parm identifies repository, 'C or E' is Z2, otherwise it uses ZS.</li>
+        	<li>Calls <strong>cl_gui_frontend_services=>file_open_dialog</strong> to prompt 
+        	    for file to upload</li>
+        	<li>Set attributes in ziv_prop_docs structure and calls fm 
+        		  <a href="#z_ix_comdoc_attributes">z_ix_comdoc_attributes</a></li>
+          <li>Calls function <a href="#alink_documents_create_dialog">
+              alink_documents_create_dialog</a> that stores document in repo and
+              returns document id.  <span class="mustChange">This needs to be
+              changed</span></li>
+          <li>Calls form <a href="#zix_doc_content_manager$generate_container">generate_container</a>
+              in zix_doc_content_manager to create container_id</li>
+          <li>Based on caller_id it inserts record into zix_documents or ziv_prop_docs</li>
+          <li>If domain_nam is populated it populates record in zix_doc_domain</li>
+          <li>It inserts record into toa01 or calls fm <a href="#z_ix_process_toa03">
+          	  z_ix_process_toa03</a></li>
+        </ul>
+		  </td>
+  </tr>
+
+  <tr>
+		<td></td>
+		<td id="z_iv_documents_find_file">z_iv_documents_find_file</td>
+		  <td>
+        <ul>
+        	<li>This function module sets some parameters and calls
+        	    screen 0900 of <a href="#ziv_sd_portal_doc_tab">
+        	    ziv_sd_portal_doc_tab</a>  That brings the user
+        	    into a screen just like the 'File Repository'
+        	    tab from within the sales portal (but without left pane).
+        	    </li>
+        </ul>
+		  </td>
+  </tr>
+
+  
+
+  <!-- ============================================== FG: ZIX_COMDOC ================================== -->
+  <tr>	
+	  <td class="FuncGroup" colspan="3" id="zix_comdoc">Function Group <strong>zix_comdoc</strong></td>	
+	</tr>
+	<tr>
+		<td></td>
+		<td id="z_ix_comdoc_attributes">z_ix_comdoc_attributes</td>
+		  <td>
+        <ul>
+        	<li>This function prompts the user for the meta data (or attributes) related to a 
+        		  document; many of these attributes are the ones stored in zix_documents
+        		  and ziv_prop_docs.  It does not update the z* tables, it returns the work
+        		  area with the attributes; the caller handles table updates (for most part).
+        		  It also supports saving defaults; it stores it in
+        	    cluster table (indx(zi)); this is done for mode 'S' (for settings).</li>  
+        	<li>Put here for ref, but review/update: it's called from zix_toolbar_customer_search, 
+        		  zix_toolbar_customer_search2, zix_salesdoc_search, zix_doc_search_grp, zix_doc_search, 
+        		  zix_doc_content_manager, ziv_sd_portal_doc_routines, ziv_sd_portal_doc_class, 
+        	  	ziv_migrate_function_top, fg: zix_documents, zix_comdoc, ziv_sd_events, zivt_contract, 
+        	    zivt</li>      	
+        </ul>
+		  </td>
+  </tr>
+
+  <tr>
+  <td></td>
+		<td id="z_iv_cm_display">z_iv_cm_display</td>
+		  <td>This function module displays the document to the user (i.e. launches the appropriate
+		  	  app/screen for it).  The only argument into this function is docId.  
+		  	  This function calls sap function <strong>bds_object_display_intern</strong>
+		  	  with the following parms.  <span class="mustChange">Needs to be changed</span>
+        <ul>
+        	<li>className     - If repoId is z2 then uses zix_documents-attachpoint else blank</li>  
+        	<li>classType     - 'BO'</li>      	
+        	<li>client        - sy-mandt</li>
+        	<li>object_key    - ' '</li>
+        	<li>bds_contrep   - repositoryId (z2 or zs)</li>
+        	<li>bds_docid     - docId</li>
+        	<li>bds_docuclass - gets file extension</li>
+        </ul>
+		  </td>
+  </tr>
+
+  <tr>
+  <td></td>
+		<td id="z_iv_edit_doc">z_iv_edit_doc</td>
+		  <td>This function module is called with the existing docId, it returns the
+		  	  newDocId.  Logic <span class="mustChange">Needs to be changed</span>
+        <ul>
+        	<li>Calls program <a href="#zix_document_edit">
+        	    zix_document_edit</a> passing in docId</li>  
+        	<li>If zix_document_edit created memory object for new docId
+        	  <ul>
+        	    <li>Searchs toa01 for archiv_id Z2 and docId, if found then
+        	    	<ul>
+        	    		<li>it will call <a href="#archiv_delete_meta">archiv_delete_meta</a>
+        	            to delete document, it'll then delete entry in table toa01.
+        	            <span class="mustChange">Change to use routine other than
+        	            fm call to archiv_delete_meta</span></li>
+        	      </ul>
+        	      else if not found
+        	      <ul>
+        	    		<li>it will call <a href="#z_ix_process_toa03">z_ix_process_toa03</a></li>
+        	      </ul>
+        	    </li>
+        	  </ul>
+        	</li>
+        </ul>
+		  </td>
+  </tr>
+
+  <tr>
+  <td></td>
+		<td id="z_ix_read_and_display_changes">z_ix_read_and_display_changes</td>
+		  <td>This function module is used to display the changes for a document is called with the container Id 
+		  	  (not docid).
+        <ul>
+        	<li>Calls sap function <strong>changeDocument_Read</strong> to get
+              change log data.  It then shows the changes to the user on a screen</li>
+        </ul>
+		  </td>
+  </tr>
+
+
+  <tr>
+  <td></td>
+		<td id="z_iv_edit_text">z_iv_edit_text</td>
+		  <td>Function called to allow user to edit text in a document.  It is called with 
+		  	  a table of text (should be char 1024 records).  If the user saves the
+		  	  text then this will return a 'save_text' export parm of 'A'.  It does not
+		  	  update any tables, the parms contain the text and save indicator.
+		  </td>
+  </tr>
+
+  
+
+  <!-- ============================================== FG: ZIX_LINKER_TABLES =========================== -->
+	<tr>	
+	  <td class="FuncGroup" colspan="3" id="zix_linker_tables">Function Group <strong>zix_linker_tables</strong></td>	
+	</tr>
+	<tr>
+		<td></td>
+		<td colspan="2">Overview: SAP has tables called 'linker' tables, they contain the metadata
+			  related to attachments; these tables are used in eclient allowing users to
+			  search for data.  When we update a record in ziv_prop_docs we update linker
+			  table toa03; for zix_documents we update toa01.  I noticed there was a lot of
+			  duplicate logic through comdoc/file repo so I created 'linker' function modules;
+			  once the data in the assocated zi* table was updated you just need to call the
+			  respective FM to get the linker table in sync.  I believe most of the code was
+			  changed for the toa03 table (to use fm), but there's still a lot of code that
+			  updates toa01 directly... that should be changed (time permitting).</td>
+	</tr>
+  <tr>
+		<td></td>
+		<td id="z_ix_process_toa03">function <strong>z_ix_process_toa03</strong></td>
+		<td>This function module will update the data in the
+        linker table toa03 based on the data in table 
+        ziv_prop_docs.  Note: It should be called after 
+        the ziv_prop_docs table is updated, even after a  
+        delete.  All the rules on whether a record should
+        be added/updated/deleted is here, there's no logic 
+        necessary elsewhere.  Logic is:
+      <ul>
+      	 <li>Search for existing record in toa03 (use existance
+      	 	   to determine action (insert/update/delete))</li>
+      	 <li>Get data from ziv_prop_docs; if not found or the record has
+      	 	   vis_outside_sale &lt;&gt; 'Y' then this is a 'delete'
+      	 	   activity for the toa03 table</li>
+      	 <li>if cdg_object_type is ATTACHMENT or PROPOSAL_SAP
+      	 	   and 'being_recorded' (optional parm) is not Y
+      	 	   then we call function z_ix_get_vbeln_status (passing
+      	 	   in cdg_object_value), if record is not found or the
+      	 	   return parm _is_recorded is not Y then this is a 
+      	 	   'delete' activity for toa03</li>
+      	 <li>Move data from ziv_prop_docs into structure for toa03
+      	     (move is by name) and we do following mapping
+      	     <ul>
+      	     	  <li>sap_object &lt;-- cdg_object_type</li>
+      	     	  <li>archiv_id &lt;-- 'ZS'</li>
+      	     	  <li>arc_doc_id &lt;-- docId</li>
+      	     	  <li>ar_object &lt;-- 'BDS_ATTACH'</li>
+      	     	  <li>ar_date &lt;-- either sy-datum or field
+      	     	  	                 attachdate (based on parm)</li>
+      	     	  <li>del_date &lt;-- dataDeleted field</li>
+      	     	  <li>reserve &lt;-- 'DOC'</li>
+      	     	  <li>use form <a href="#zix_linker_tables$getName">getName</a>
+      	     	      to get name for creator and owner</li>
+      	     </ul>
+      	 </li>	
+         <li>Based on the activity the code will
+         	 <dl>
+         	 	 <dt>'D'elete</dt>
+         	 	   <dd>Calls form <a href="#zix_linker_tables$deleteOrMaskToa0x">
+         	 	   	   deleteOrMaskToa0x</a>, it passes in the
+         	 	   	   repository id, the docId, and a forceFlag</dd>
+         	 	 <dt>'U'pdate</dt>
+         	 	   <dd>It updates the record in toa03</dd>
+         	 	 <dt>'I'nsert</dt>
+         	 	   <dd>It inserts a new record into toa03</dd>
+         	 </dl>
+         </li>
+      </ul>
+    </td>
+  </tr>
+
+  <tr>
+		<td></td>
+		<td id="z_ix_process_toa01">function <strong>z_ix_process_toa01</strong></td>
+		<td>This function module is very similar to the one
+		    above, but it populates linker toa01.  
+		    We could have had one fm but it 
+		    was cleaner to keep separate so I did.<br/>
+		    I won't repeat what's described in other routine; the
+		    differences:
+      <ul>
+      	 <li>Doesn't have logic to for types ATTACHMENT
+      	 	   or PROPOSAL_SAP (that's only applicable for toa03)</li>
+      	 <li>archiv_id is 'Z2' not 'ZS'</li>
+      </ul>
+    </td>
+  </tr>
+
+
+  <tr>
+  	<td></td>
+  	<td id="zix_linker_tables$getName">form <strong>getName</strong></td>
+  	<td>This form is passed in a personKey, it has a return parm
+  		  of type C.  It uses the personKey to search ziv_sdel_people
+  		  table, it returns the lastname, firstname of the record (and
+  	    a blank value if not found).</td>
+  </tr>
+
+  <tr>
+  	<td></td>
+  	<td id="zix_linker_tables$deleteOrMaskToa0x">form <strong>deleteOrMaskToa0x</strong></td>
+  	<td>This form deletes (or masks) the record in the linker table.  The 
+  	    repositorId passed in determines if it's toa01 or toa03.  <br/>
+  	    Logic: if record exists in zi* table then the record in toa0x is
+        masked (or blanked out), this causes it to be updated via 
+        index transfer (but user would have to search on blank). 
+        If record does not exist in zi* table then the function
+        <a href="#archiv_delete_meta">archiv_delete_meta</a>
+        is called (this deletes the attachment from the content
+        repository), after that the record is physically deleted from the 
+        toa0x table. <span class="mustChange">Change this code so that
+        it uses something else other than archiv_delete_meta</span><br/>
+        Note if record was previously masked then the update will
+        not occur unless _forceMaskUpd is Y.</td>
+  </tr>
+
+
+
+
+  <!-- ============================================== FG: ZIV_SD_PORTAL =============================== -->
+  <tr>	
+	  <td class="FuncGroup" colspan="3" id="ziv_sd_portal">Function Group <strong>ziv_sd_portal</strong></td>	
+	</tr>
+	<tr>
+		<td></td>
+		<td id="z_iv_sd_goto_portal">z_iv_sd_goto_portal</td>
+		  <td>
+        <ul>
+        	<li>This function module brings the user into the sales portal for the
+        		  particular proposal.  The proposal number and additional parms
+        		  are passed into the function.  The function stores these items
+        		  as parameters and then triggers transactin <strong>
+        		  ziv_sd_portal_stub</strong>.  Could add more here but as it's not
+        		  relevent to attachments I won't :)</li>        	
+        </ul>
+		  </td>
+  </tr>
+
+
+
+  <!-- ============================================== FG: ALINK_DISPLAY_DOCUMENTS (SAP CODE) ========== -->
+  <tr>	
+	  <td class="FuncGroup" colspan="3" id="alink_display_document">Function Group <strong>alink_display_document</strong>
+	     (sap provided)</td>	
+	</tr>
+	<tr>
+		<td></td>
+		<td id="alink_documents_create_dialog">alink_documents_create_dialog</td>
+		  <td>
+        <ul>
+        	<li>This creates a document in the content repository.  <span class="mustChange">You shouldn't
+        	    see references in z* code after common modules implemented</span></li>        	
+        </ul>
+		  </td>
+  </tr>
+
+
+
+  <!-- ============================================== FG: OPTB (SAP CODE) ============================= -->
+  <tr>	
+	  <td class="FuncGroup" colspan="3" id="optb">Function Group <strong>optb</strong> (sap provided)</td>	
+	</tr>
+	<tr>
+		<td></td>
+		<td id="archiv_delete_meta">archiv_delete_meta</td>
+		  <td>
+        <ul>
+        	<li>This function module is used to delete the attachment from the content
+        	    repository.  <span class="mustChange">We'll need similar 'common method' but
+        	    we shouldn't have references to this after migration</span></li>        	
+        </ul>
+		  </td>
+  </tr>
+
+
+  
+  <!-- ============================================== FG: ARCHIVOBJECT (SAP CODE) ===================== -->
+  <tr>	
+	  <td class="FuncGroup" colspan="3" id="optb">Function Group <strong>archivobject</strong> (sap provided)</td>	
+	</tr>
+	<tr>
+		<td></td>
+		<td id="archivobject_get_table">archivobject_get_table</td>
+		  <td>
+        <ul>
+        	<li>This returns the document as table(s) of data; say tables cause it returns a table
+        	    in char 1024 format and also a table of raw data in 1024 format.  
+        	    <span class="mustChange">When we migrate to new objects you shouldn't see any 
+        	    references to this fm in our code</span></li>        	
+        </ul>
+		  </td>
+  </tr>
+
+
+
+  <!-- ============================================== FG: SCMS_API (SAP CODE) ========================= -->
+  <tr>	
+	  <td class="FuncGroup" colspan="3" id="optb">Function Group <strong>scms_api</strong> (sap provided)</td>	
+	</tr>
+	<tr>
+		<td></td>
+		<td id="scms_doc_create">scms_doc_create</td>
+		  <td>
+        <ul>
+        	<li>This fm is provided by sap, it is called to create a document.   
+        	    <span class="mustChange">When we migrate to new objects you shouldn't see any 
+        	    references to this fm in our code</span></li>        	
+        </ul>
+		  </td>
+  </tr>
+
+
+
+  <!-- ============================================== FG: SCMS_HTTP (SAP CODE) ======================== -->
+  <tr>	
+	  <td class="FuncGroup" colspan="3" id="optb">Function Group <strong>scms_http</strong> (sap provided)</td>	
+	</tr>
+	<tr>
+		<td></td>
+		<td id="scms_http_create_table">scms_http_create_table</td>
+		  <td>
+        <ul>
+        	<li>This fm is provided by sap, it will create a document in the http
+        		  repository.  The repository id and doc info/data are passed as arguments in; it
+        		  returns the docid of the doc created.
+        	    <span class="mustChange">When we migrate to new objects you shouldn't see any 
+        	    references to this fm in our code</span></li>        	
+        </ul>
+		  </td>
+  </tr>
+
+  <!-- ============================================== FG: SCMS_AO_API (SAP CODE) ====================== -->
+  <tr>	
+	  <td class="FuncGroup" colspan="3" id="optb">Function Group <strong>scms_ao_api</strong> (sap provided)</td>	
+	</tr>
+	<tr>
+		<td></td>
+		<td id="scms_ao_file_get_fe">scms_ao_file_get_fe</td>
+		  <td>
+        <ul>
+        	<li>This function module retrieves the attachment from the repository
+        	    and stores it in the path specified by parameter (locally on users machine).
+        	    <span class="mustChange">When we migrate to new objects you shouldn't see any 
+        	    references to this fm in our code</span></li>        	
+        </ul>
+		  </td>
+  </tr>
+
+  <!-- ============================================== FG: BDS_TOOLS (SAP CODE) ======================== -->
+  <tr>	
+	  <td class="FuncGroup" colspan="3" id="optb">Function Group <strong>bds_tools</strong> (sap provided)</td>	
+	</tr>
+	<tr>
+		<td></td>
+		<td id="bds_object_display_intern">bds_object_display_intern</td>
+		  <td>
+        <ul>
+        	<li>This function will launch the local application on the users
+        		  machine for the document requested; it's as if the document
+        		  was opened from operating system (i.e. not from within a sap
+        		  pane).  Pretty cool :)<br/>
+        	    <span class="mustChange">When we migrate to new objects you shouldn't see any 
+        	    references to this fm in our code</span></li>        	
+        </ul>
+		  </td>
+  </tr>
+
+
+
+  
+  <!-- ============================================== PGM: ZIX_DOC_CONTENT_MANAGER ==================== -->
+  <tr>
+  	<td class="Program" class="review" colspan="3" id="zix_doc_content_manager">Program <strong>zix_doc_content_manager</strong></td>
+  </tr>
+  <tr>
+  	<td></td>
+		<td id="zix_doc_content_manager$generate_container">form: <strong>generate_container</strong></td>
+		<td>calls sap function <strong>NUMBER_GET_NEXT</strong> to get the next number value to use
+		 	  for the zix_comdoc object, it returns that value to the caller</td>
+  </tr>
+  
+  <tr>
+  	<td></td>
+		<td id="zix_doc_content_manager$export">form: <strong>export</strong></td>
+		<td>Form presents the user with a dialog box to confirm the export.  If user
+			  confirms it then the code calls form <a href="#zix_doc_content_manager$export_document">
+			  export_document</a> below.</td>
+  </tr>
+
+  <tr>
+  	<td></td>
+		<td id="zix_doc_content_manager$export_document">form: <strong>export_document</strong></td>
+		<td>Form is passed docId (only).  It 
+       <ul>
+       	  <li>Search z* table to get filename and calculate repId (z2/zix_documents, zs/ziv_prop_docs)</li>
+       	  <li>calls form <strong>get_local_path</strong> to get the directory where the file should
+       	      be stored.  The name of the file exported is the same name as in sap.</li>
+       	  <li>checks for overwriting file (prompts user if applicable)</li>
+       	  <li>calls sap fm <a href="#scms_ao_file_get_fe">scms_ao_file_get_fe</a> to download file locally
+       	      <span class="mustChange">Needs changes here to use new methods</span></li>
+       	</ul>
+		</td>
+  </tr>
+
+  <tr>
+  	<td></td>
+		<td id="zix_doc_content_manager$replace_authority">form: <strong>replace_authority</strong></td>
+		<td>Form gets person key from ziv_sdel_people for sy-uname <span class="important">Should change to only
+			  look at 'A'ctive status</span>.  It then checks users authorization and returns flag for the
+			caller to interrogate</td>
+  </tr>
+
+  <tr>
+  	<td></td>
+		<td id="zix_doc_content_manager$replace_doc">form: <strong>replace_doc</strong></td>
+		<td>Form is passed several parms using: filename, changing: saveFlag(char1), oldDoc(zix_documents), docDomainName
+			  <span class="mustChange">This needs to change</span>
+       <ul>
+       	  <li>Gets data from zix_documents (by docid/container), ziv_sdel_people, sets bunch of
+       	  	  attributes, fyi: <span class="important">calls split_path in oaall - should change</span></li>
+       	  <li>Calls function module <a href="#alink_documents_create_dialog">alink_documents_create_dialog</a>
+       	      <span class="mustChange">Change this</span></li>
+          <li>Calls method zcl_ix_documents_utilities=>getFileDateTime to populate zix_documnts-document_date</li>
+          <li>Calls form <a href="#zix_doc_content_manager$update_toa01">update_toa01</a></li>
+          <li>Inserts record into zix_documents</li>
+          <li>It will then call fn <a href="#archiv_delete_meta">archiv_delete_meta</a> for the old docId, and will
+          	  delete old docId record from zix_documents, toa01 <span class="mustChange">change fm call on
+          	  archiv_delete_meta to something else</span></li>
+          <li>Will call form <a href="#zix_doc_content_manager$update_attributes_and_tree">
+              update_attributes_and_tree</a></li>
+       </ul>
+		</td>
+  </tr>
+
+  <tr>
+  	<td></td>
+		<td id="zix_doc_content_manager$update_toa01">form: <strong>update_toa01</strong></td>
+		<td>This updates the linker table toa01 with the data from zix_documents, ziv_sdel_people table.  
+		    <span class="important">Function Z_IX_PROCESS_TOA01 should be used instead of this form</span></td>
+  </tr>
+
+  <tr>
+  	<td></td>
+		<td id="zix_doc_content_manager$update_attributes_and_tree">form: 
+			  <strong>update_attributes_and_tree</strong></td>
+		<td>Calls function <a href="#z_ix_comdoc_attributes">z_ix_comdoc_attributes</a>
+			  to get attributes.  It calls form <a href="#zix_doc_content_manager$update_attcon">
+			  update_attcon</a>, has contracts for document.  It updates the zix_documents
+			  table, the toa01 table <span class="important">should use z_ix_process_toa01</span></td>
+  </tr>
+
+  <tr>
+  	<td></td>
+		<td id="zix_doc_content_manager$get_file_extension">form: 
+			  <strong>get_file_extension</strong></td>
+		<td>This form is passed in a filename and fileextension; it updates the 'fileextension'
+		    argument with the extension (upper cased); it does this by taking the part after
+		    the '.'  If there's no '.' then 'blank' is returned.</td>
+  </tr>
+
+   <tr>
+  	<td></td>
+		<td id="zix_doc_content_manager$update_attcon">form: 
+			  <strong>update_attcon</strong></td>
+		<td>This form is passed in a table that has docid and contracts.  It is <strong>misleading</strong>
+			  the zix_doc_attcon table has column docid but it appears that the value
+			  is really the container id.</td>
+  </tr>
+
+
+
+
+  <!-- ============================================== PGM: ZIX_DOC_SEARCH_GRP ========================= -->
+  <tr>		
+		<td class="Program" colspan="3" id="zix_doc_search_grp">Program <strong>zix_doc_search_grp</strong></td>		  		  
+  </tr>
+  <tr>
+  	<td></td>
+		<td colspan="2">This program allows the user to search for documents.  The first screen presents the
+		  user with fields for searching.  After specifying the search criteria they're presented with 
+		  the results screen.  When the user selects options (at top of alv) it'll trigger the pai
+		  (user_command_9001).  It has the following logic for each function code (names should be
+		  obvious as to what it does):
+			<dl>
+				<dt>OPEN</dt>
+				  <dd>calls form 'open', it calls fm <a href="#z_iv_cm_display">
+						z_iv_cm_display</a> (also passes in docid)</dd>
+				<dt>DISPLAY</dt>
+				  <dd>Calls <a href="#z_ix_comdoc_attributes">z_ix_comdoc_attributes</a>, upon return it takes
+				    the following action based on the 'action' return value
+						<dl>
+							<dt>A (add/update)</dt><dd>This is update action letter, it updates z* tables and linker table</dd>
+							<dt>D (delete)</dt><dd>calls form 'delete', it sets deleted flag to 'X'
+							                       in zix_documents and toa01</dd>
+							<dt>U (un-delete)</dt><dd>calls form 'undelete', it clears the deleted flag
+							                          in zix_documents and toa01</dd>
+							<dt>E (export)</dt><dd>calls form 'export', it has some checking
+						                         and calls form <a href="#zix_doc_content_manager$export_document">
+						                         export_document</a> in program zix_doc_content_manager (passes in docid)</dd>
+							<dt>O (open)</dt><dd>calls form 'open', it calls fm 
+					    		                 <a href="#z_iv_cm_display">
+							                     z_iv_cm_display</a> (passes in docid)</dd>
+						</dl>
+				</dd>
+
+	      <dt>DETACH</dt>
+	        <dd>calls form 'export', it has some checking
+						  and calls form <a href="#zix_doc_content_manager$export_document">
+						  export_document</a> in program zix_doc_content_manager (passes in docid)</dd>
+				<dt>DELETE</dt>
+				  <dd>calls form 'delete', it sets deleted flag to 'X'
+					    in zix_documents and toa01</dd>
+				<dt>EDIT</dt>
+				  <dd>calls form 'edit', that calls function
+				  	  <a href="#z_iv_edit_doc">z_iv_edit_doc</a> passing
+				  	  in docid, that fm returns the newDocId if the document
+				  	  was saved (can't edit in place).  If a newDocId is 
+				  	  returned it calls form 'update_attributes' which
+				  	  will update z* and linker tables</dd>				  
+				<dt>UNDELETE</dt>
+				  <dd>calls form 'undelete', it clears the deleted flag
+						  in zix_documents and toa01</dd>
+				<dt>REPLACE</dt>
+				  <dd>calls form 'replace', that form does
+				  	<ul>
+				  		<li class="mustChange">This needs changing</li>
+				  		<li>performs form <a href="#zix_doc_content_manager$replace_authority">
+				  		    replace_authority</a>	in program zix_content_manager (auth checking)</li>
+				  		<li>calls method cl_gui_frontend_services=>file_open_dialog to get file</li>
+				  		<li>performs form <a href="#zix_doc_content_manager$replace_doc">
+				  		    replace_doc</a>	in program zix_content_manager.</li>
+				  		<li><span class="important">Not sure why</span> but this updates
+				  			  zix_doc_domain table (not other zi* ones), weird, research more</li>
+            </ul>
+				  </dd>
+				<dt>HISTORY</dt>
+				  <dd>Calls function <a href="#z_ix_read_and_display_changes">
+				      z_ix_read_and_display_changes</a> it passes in the container id (not docid)</dd>
+			</dl>
+  	</td>
+  </tr>
+
+  <!-- ============================================== PGM: ZIX_DOCUMENT_EDIT ========================== -->
+  <tr>		
+		<td class="Program" colspan="3" id="zix_document_edit">Program <strong>zix_document_edit</strong></td>		  		  
+  </tr>
+  <tr>
+  	<td></td>
+		<td colspan="2">This program allows user to edit document.  It is passed (or prompts) for the
+		  document id.  Logic is: <span class="important">btw: changes needed here</span>
+      <ul>
+         <li>Uses data from ziv_prop_docs, zix_documents, zix_doc_domain</li>
+         <li>calls <a href="#zix_doc_content_manager$get_file_extension">get_file_extension</a> to
+         	   get fileExtension (will be returned in upper case (blank if no extension found))</li>
+         <li>if extension is TXT
+         	  <ul>
+         	  	<li>it calls function <a href="#archivobject_get_table">archivobject_get_table</a>
+         	  		  to get file contents as table of 1024 byte characters (return parm archivobject)
+         	  	    <span class="mustChange">Needs changes</span></li>
+         	    <li>Calls function <a href="#z_iv_edit_text">z_iv_edit_text</a>, that puts up
+         	    	  the text file on the screen and allows user to change it.</li>
+         	    <li>If users saves text then it will call function 
+         	    	  <a href="#scms_doc_create">scms_doc_create</a> 
+         	    	  to save the document <span class="mustChange">change this</span>.  It will also
+         	    	  insert new records into zix_documents, ziv_prop_docs, zix_doc_domain, linker
+         	    	  tables (toa0n) and delete the old records <span class="important">does not
+         	    	  appear to delete old attachment; also the call to scms_doc_create is
+         	    	  strange as it doesn't reference repository id but uses 'stor_cat'; since
+         	    	  replacing probably not worth time researching more</span></li>
+         	  </ul>
+         </li>
+         <li>else if extension is not TXT
+           <ul>
+         	  	<li>it calls function <a href="#archivobject_get_table">archivobject_get_table</a>
+         	  		  to get file contents as table of 1024 byte 'raw' data (return parm binarchivobject)
+         	  		  <span class="mustChange">Change this</span></li>
+         	  	<li>It uses file extension to map to document type (local form create_document); this
+         	  		  sets type to things like Word.Document, Excel.Sheet...</li>
+         	  	<li>It has local class (c_office_document) to allow user to edit document
+         	  		  by launching application.</li>
+         	  	<li>On save it calls method c_office_document->save_document; that calls
+         	  		  function <a href="#scms_http_create_table">scms_http_create_table</a>
+         	  		  <span class="mustChange">Changes needed here</span> it then updates
+         	  		  the zi* tables and linker tables</li>
+           </ul>
+         </li>
+      </ul>
+		</td>
+	</tr>
+
+  <!-- ============================================== PGM: ZIV_SD_PORTAL_DOC_TAB ====================== --> 
+  <tr>		
+		<td class="Program" colspan="3" id="ziv_sd_portal_doc_tab">Program <strong>ziv_sd_portal_doc_tab</strong></td> 
+  </tr>
+  <tr>
+  	<td></td>
+		<td colspan="2">This program handles 'File Repository' logic from within a sales
+		  proposal.  It shows an alv brid of the documents replated to a proposal in
+		  a subscreen (0900).  The user can use menu options to perform various functions.  Most
+		  of the logic is within method handle_user_command in file ziv_sd_portal_doc_class</td>
+	</tr>
+	<tr><td></td>
+		  <td>Launch attachment [OPEN]</td>
+		  <td>
+		  	<ul>
+		  		 <li>It Checks that user is authorized</li>		  		 
+           <li>calls <a href="#zix_doc_content_manager$get_file_extension">get_file_extension</a> to
+         	   get fileExtension (will be returned in upper case (blank if no extension found))</li>
+         	 <li>Calls function <a href="#bds_object_display_intern">bds_object_display_intern</a>
+         	     this will display the document</li>
+        </ul></td>            
+	</tr>
+  <tr><td></td>
+		  <td>Open and change existing Attachment [EDIT]</td>
+		  <td>
+      	<ul>
+      		<li>Checks authority</li>
+      		<li>Calls form document_edit
+      			<ul>
+      				 <li>Calls function <a href="#z_iv_edit_doc">z_iv_edit_doc</a>, this will
+      				 	   allow replacement (new document id)</li>
+      				 <li>User can then change document attributes, 
+      				 	   function <a href="#z_ix_comdoc_attributes">z_ix_comdoc_attributes</a>,
+      				 	   it'll update zi* table if changed attribute</li>
+      				 <li>Updates linker table toa01 or calls
+      				 	   function <a href="#z_ix_process_toa03">
+      				 	   z_ix_process_toa03</a> (depending on doc type)</li>
+      			</ul>
+      		</li>
+      	</ul>
+      </td></tr>
+  <tr><td></td>
+      <td>Replace existing attachment [REPL]</td>
+      <td>
+      	<ul>
+      		<li>Checks authority</li>
+      		<li>Gets file from users machine (method cl_gui_frontend_services=>file_open_dialog)</li>
+          <li>Calls form replace_doc <span class="important">dumb, this is
+	     	  	  almost exactly like code in ziv_salesdoc_search</span>
+	     	  <ul>
+	     	     <li>It builds zi* record from old doc</li>
+	     	   	 <li><span class="important">calls split_path in oaall (change this)</span>
+	     	   	   	  to split path/name into path and filename</li>
+	     	   	 <li>Determines file extension (form get_file_extension)</li>
+	     	   	 <li>Calls function <a href="#alink_documents_create_dialog">
+	     	   	   	 alink_documents_create_dialog</a> to save the document
+	     	   	   	 in the content repo <span class="mustChange">Change this</span></li>
+	     	   	 <li>Inserts new record in zi* table</li>
+	     	   	 <li>Inserts record in toa01 or calls function <a href="#z_ix_process_toa03">
+	     	   	  	z_ix_process_toa03</a> to sync toa03 (depends on doc loc)</li>
+	      	 	  <li>Deletes old record from zi* table and calls function
+	     		 	  	  z_ix_process_toa03 if it's a prop docs record.  <span class="important">
+	     		 	  	  doesn't update toa01 though, should fix</span></li>
+	     	  </ul>
+	     	  </li>
+	     	  <li>Asks user if they want to change attributes, if so it'll update
+	     	  	  zi* record and linker record (uses function
+	     	  	  <a href="#z_ix_comdoc_attributes">z_ix_comdoc_attributes</a>
+	     	  	to get attributes)</li>
+      	</ul>
+      </td></tr>
+  <tr><td></td>
+      <td>Create Attachment [CREA]</td>
+      <td>
+      	<ul>
+      		<li>Checks authority</li>
+      		<li>Calls function <a href="#z_iv_documents_attach_file">z_iv_documents_attach_file</a>
+      			  that fm handles everything</li>
+      	</ul>
+      </td></tr>
+  <tr><td></td>
+      <td>Detach attachment [DETA]</td>
+      <td>
+      	<ul>
+      		<li>Checks authority</li>
+      		<li>Prompts to confirm detach</li>
+      		<li>Calls form <a href="#zix_doc_content_manager$export">Export</a>
+	     	   	  in program zix_doc_content_manager, that routine is
+	     	   	  responsible to export file to local file system.</li>
+      	</ul>
+      </td></tr>
+  <tr><td></td>
+      <td>Delete attachment [DELE]</td>
+      <td>
+      	<ul>
+      		<li>Checks authority</li>
+      		<li>Prompts the user to confirm delete</li>
+          <li>Sets deleted flag in zi* table</li>
+          <li>Updates table toa01 or calls fm
+          	  <a href="#z_ix_process_toa03">z_ix_process_toa03</a>
+          	  depending on prop docs (or zix_docs) record</li>          
+      	</ul>
+      </td></tr>
+  <tr><td></td>
+		  <td>Attributes [ATTR]</td>
+		  <td>
+		  	<ul>
+           <li>Checks user is authorized</li>
+           <li>Calls function <a href="#z_ix_comdoc_attributes">z_ix_comdoc_attributes
+               </a> passing in mode of 'D'.  If function module returns action of 'A' 
+               then the data in zi* table will be updated and fm 
+               <a href="#z_ix_process_toa03">z_ix_process_toa03</a> is called</li>
+	      </ul>
+	    </td>
+	</tr>
+  <tr><td></td>
+      <td>Visible Outside Sales [SDVI]</td>
+       <td>
+      	<ul>
+      		<li>Prompts user to confirm want flag changed</li>
+      		<li>Updates vis_outside_sale column in ziv_prop_docs</li>
+          <li>Calls fm
+          	  <a href="#z_ix_process_toa03">z_ix_process_toa03</a>
+          	  to sync data in toa03</li>          
+      	</ul>
+      </td></tr>
+  <tr><td></td>
+      <td>Show change history [HIST]</td>
+      <td>Calls function <a href="#z_ix_read_and_display_changes">
+          z_ix_read_and_display_changes</a></td></tr>
+
+<!-- ============================================== PGM: ZIX_DOC_CONTENT_MANAGER===================== -->
+<!-- ============================================== PGM: ZIX_DOC_CONTENT_MANAGER===================== -->
+</table>
+
+</body>
+
+</HTML>

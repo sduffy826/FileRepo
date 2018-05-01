@@ -1,0 +1,294 @@
+
+<!-- ============================================================================================ -->
+
+<h3>Remember!</h3>
+<p>The underscore means ignore this</p>
+<p>functions are format 'func funcName(label name: Type)' you call the func as funcName(label: 3), 
+   the label must be present when you call the func, the 'name' is the variable name 
+   you use inside your func; the short version is 'func funcName(name: Type)' this means 
+   that the label and the name are both the same, you call with 'funcName(name: 3)'.  
+   If you want to call a function without a label use _, so 
+   'func funcName(_ name: Int)' allows you to call it like 'funcName(3)'</p>
+
+<p>If you want to ignore the value returned from a function you can do<pre>
+_ = funcName(...)</pre></p>
+<p>Can do same by ignoring element of tuple returned<pre>
+let (abc, _, xyz) = func(...)</pre></p>
+
+<p>Get color literal, type 'color' in editor</p>
+
+<!-- ============================================================================================ -->
+
+<hr />
+<!-- ========================================================================================== -->
+<h3>Class 1 - Intro podcast</h3>
+<p>Components in ios</p>
+<ul>
+  <li>cocoa touch (button, sliders, map kit, image picker, camera, controls, localization)</li>
+  <li>media  (not much learing hear: core audio, openal, audio mixing, audio recording, 
+      video playback, images)</li>
+  <li>core svcs  (oops layer, collections, address book, networking, file access, sqllite ...)</li>
+  <li>core os  (hardware, it's unix (most in c), bsd, sockets, security)</li>
+</ul>
+
+<p>xcode 9, instruments added onto xcode 9</p>
+
+<p>swift replacement for objective c (just another language)</p>
+<p>frameworks - collections of objects, biggest is uikit, other examples: core data, map kit</p>
+<p>design strategy is MVC (must design this way)</p>
+
+<p>reading: read manual on swift</p>
+<p>He did demo</p>
+<ul>
+  <li>xcode - download/install</li>
+  <li>Misc xcode info
+    <ul>
+      <li>goto preferences for key bindings, see command keys</li>
+      <li>in preferences-accounts, put in apple id, have personal team, add your itunes acct</li>
+      <li>The Assets.xcassets has images</li>
+      <li>Main.storyboard is visual drawing pad, the view</li>
+      <li>ViewController, is our controller - glue between model/view</li>
+      <li>Blue lines are important... use; allow for conceptual spacing</li>
+      <li>we import modules, i.e. foundation</li>
+      <li>Make buttons 64x64</li>
+    </ul>
+  </li>
+  <li>create project
+     <ul>
+        <li>an ios app, single view app</li>
+        <li>product name - name your app</li>
+        <li>team - use your apple id, to create dev team</li>
+        <li>org name, put Corti</li>
+        <li>org identifier, com.corti</li>
+        <li>don't select core or any other button</li>
+     </ul></li>
+  <li>next</li>
+  <li>put in home directory/developer</li>
+  <li>it opens to ui, left if navigator, middle is editor, right is utility pane 
+      (use upper icon's to hide panes)</li>
+  <li>run it by clicking play button in menu</li>
+  <li>(fyi on iphone x you swipe up to bring home button)</li>
+  <li>all files, you only need view controller, main storboard, info.plist. 
+      the other select and do new group for selection, that'll hide them</li>
+  <li>To build ui, we'll build card to flip (which use a button)
+      (key alt and mouse wheel zoom in/out)</li>
+  <li>To draw on storyboard, you open item palette, you drag it onto ui
+    <ul>
+      <li>double click button text to change text</li>
+      <li>in top of utilities pane you can change the attributes of button, 
+          in utilities pane it shows all the objects that the item inherits from</li>
+    </ul></li>
+  <li>To connect your ui to code (view controller), you open the assistant editor (the two circles)
+    <ul>
+      <li>ctrl drag ui object into your code, make it an action,
+           means when clicked call method, give it a name, give it argument 
+           of sender, <strong>make sure the</strong> type is 'button' (or ui object u were on).  
+           hit connect</li>
+      <li>@IBAction is a directive for xcode so it can put that circle in editor showing
+          the object it's related to</li>
+      <li>the arguments to function (x y: type), type is the type of object, 
+          the x y is the one argument, the x and y are the names of the parameter, 
+          external name and the internal name to the method, we use the internal 
+          name in the method (the y) (read more on this)</li>
+      <li>trick click xcode behaviors, in running when generate output, can say 
+          show debugger to automatically open the pane</li>
+    </ul></li>
+  <li>we add a function in code <pre>
+        'func flipCard(withEmoji emoji: String, on button: UIButton) {
+            if button.currentTitle == emoji {
+              button.setTitle(" ", for: UiControlState.normal)
+              button.backgroundColor = Put color orange literal here (can't type)
+            }
+            else {
+              button.setTitle(emoji, for: UIControlState.normal)
+              button.backgroundColor = white color literal
+            }
+         }'</pre>
+      you want your call on function to read like english, if you only pass 
+      one argument then both the x and y names are the same, also use '_' means 
+      no argument (it's rare u use this, you'll see on xcode methods, that mainly 
+      is like that from objective c code that doesn't have internal external names.</li>
+   <li>you can press . to send message (it'll show all methods/variables the object understands)
+       hit and click object it'll show u the text related to it make sure you read the 
+       overview section of classes you use</li>
+   <li>You can copy/paste cards (or any ui object), if you do this make sure you 
+       remove one of the messages something it sends, you right click on thing in ui 
+       to see what it calls print("xxx \()  means put something inside there and interpret 
+       as string \(emoji)")</li>
+   <li>To add instance variable to class: var flipCount: Int  (you put type after the name),
+       you need to add an initializer ... all instance variables (called properties) need 
+       to be initialized.  there are two ways to do this... with initializer (a method with 
+       name init), each initializer must init all vars; the other way to initiliaze is to 
+       do variable = value (var flipCount: Int = 0</li>
+   <li>Swift is very strongly typed language!!!!  it also has strong type inference... 
+       you can do var flipCount = 0 (to see type hold option click var it'll show what it is)
+       note: any time you're copy/pasting code it's wrong</li>
+   <li>UILabel to add text to screen, you ctrl+drag into code, this time want
+       outlet, an outlet creates an instance variable (a property); give it name 
+       flipCountLabel, it creates @IBOutlet weak var flipCountLabel: Label
+       The ! (we'll talk about later), a ! doesn't have to be initialized, very 
+       very important!! You change it doing flipCountLabel.text = "Flips: \(flipcount)"</li>
+   <li>Any property, you can put code after it everytime it's touched, it's called a property observer.<pre>
+       var flipCount = 0 {
+         didSet { flipCountLabel.txt = "Flips: \(flipCount)" }
+       }</pre></li>
+   <li>You can multi select in ui and change them; they have to be same type... </li>
+   <li>For us we'll create an array of cards, need ctrl drag; make this an Outlet Collection,
+       make name can do Array&lt;UIButton&gt; or [UIButton] </li>
+   <li>To rename, do command click in code; and rename</li>
+   <li>Another way in ui to hookup ui to code, click the yellow circle in top of storyboard 
+       and ctrl drag onto the ui objects</li>
+   <li>To find object in array: var cardNumber = cardButtons.index(of: sender); that 
+       returns an ? (we use let for constants; always us it), it's an optional... the 
+       return value of Int? means it's optional... an optional is a differnt type of Int; 
+       it has two states, set and not set; it's an enumeration (enumaration is set of valid 
+       values) in swift an enumeration has an 'associate value' that's the 'Int' part of 
+       'Int?'; so for set values it returns the associated value... the word 'nil' it means 
+       an optional that's not set. to convert optional; do var cardNumber = cardButtons.index(of: sender)! 
+       (note can't do this when nil was returned), instead of using ! to unwrap it, do 
+       'if let cardNumber = cardButtons.index(of: sender) {' so it conditionally unwraps them.</li>
+   <li>There are two types of optionals ? and !</li>
+   <li>Can make array var emojiChoices: Array&lt;String&gt; = ["", "", ""]</li>
+   <li>His touchard method now (using array of cards)<pre>
+       @IBAction func touchCard(_ sender: UIButton) {
+         flipCount += 1
+         if let cardNumber = cardButtons.index(of: sender) {
+           flipCard(withEmoji: emojiChoices[cardNumber], on: sender) 
+         } else {
+           print("card not found in cardButtons")
+         }
+       }</pre></li>
+</ul>
+
+<!-- ============================================================================================ -->
+<hr />
+<h3>class 2</h3>
+
+<h4>MVC - design paradigm</h4>
+
+<p><strong>Model</strong> - UI Independent set of objects, the what of our app (knowledge about our app)</p>
+<p><strong>View</strong> - The controllers minions, generic ui components that the controller communicates to get ui displayed</p>
+<p><strong>Controller</strong> - The who the app appears on screen, this is the ui</p>
+
+<p>The controller communicates with model and view (and vica versa), the model never communicates with view.
+   The model, this is the application, but no user interface.
+   The view talks to controller by using blind communication; it uses target action (the controller hangs a target onitself and view invokes it, another is by using delegate they usually start with will, should, did; we'll see more about this in future</p>
+
+<p>Controller uses outlet to talk to view, we also have data source delegate.
+The controller interprets and formats the models data for the view, it's the center of communication</p>
+
+<p>The model can talk to controller (ie. data change), it does this with a radio station model; the controller listens to that, it's called notification or key value observing (kvo).</p>
+
+<p>An mvc usually only controls one screen on ipad/iphone; most mvc's have ton's of screens (multiple mvc's); basically one mvc it treats other mvc's as the view </p>
+
+<p>His demo - Need to make a model for concentration</p>
+
+<p>Do (file-new-file; select swift file) call it Concentration</p>
+<pre>
+
+class Concentration  {
+  // think about it's public api, makes you think about what do you need to make it work
+  var cards = [Card]()  // this creates an empty array of cards or do = Array&lt;Card&gt;()
+
+  var indexOfOneAndOnlyFaceUpCard: Int?
+
+  func chooseCard(at index: Int) {
+    if !card[index].isMatched {  // Card selected not already matched
+      if let matchIndex = indexOfOneAndOnlyFaceUpCard, matchIndex != index {  // Index of card up
+        if cards[matchedIndex].identifier == card[index].identifier {
+          cards[matchedIndex].isMatched = true
+          cards[index].isMatched = true
+        }
+        cards[index].isFaceUp = true
+        indexOfOneAndOnlyFaceUpCard = nil
+      }
+      else {  // We either have no cards face up, or two cards face up, so turn all down and make the
+              // card selected the face up one
+        for (cardIndex in cards.indices ) {
+          cards[cardIndex].isFaceUp = false
+        }
+        cards[index].isFaceUp = true
+        indexOfOneAndOnlyFaceUpCard = index
+      }
+    }
+  }
+
+  func shuffleCards() {
+    var lastCard = cards.count - 1
+    while(last > 0)
+    {
+      let randomCard = Int(arc4random_uniform(UInt32(lastCard)))  
+      cards.swapAt(lastCard, randomCard)
+      lastCard -= 1
+    }
+  }
+
+  init(numberOfPairsOfCards: Int) {
+    for _ in 0..&lt;numberOfPairsOfCards  // anything that's a sequence is valid in for loop, a 
+      let card = Card()                // string is valid, a countable range is also valid
+      cards += [card, card]            // remember with struct it's a copy of the card when you store
+                                       // it so we're just appending an array onto the cards array (with +)
+
+    // We have all the cards, need to shuffle them
+    shuffleCards()
+  }
+}
+
+// Make a Card struct; there almost the same; major diff with struct/class, structs no inheritance, structs are value typed classes are reference types; with a struct when you pass them they are copied, with objects it
+they're only copied when you want to change them, it's called 'copy on write semantics'  (note arrays, dictionaries, even int's are structs)
+
+struct Card {
+  var isFaceUp = false
+  var isMatched = false
+  var identifier: Int
+  // You don't have the emoji here... cause that's how you display the card  
+
+  static var identifierFactory = 0
+
+  init(identifier: Int) {        // usually have the same external and internal name
+    self.identifier = Card.getUniqueIdentifier()
+  }
+
+  static func getUniqueIdentifier() -> Int {
+    identifierFactory += 1   // It knows to access static var
+    return identifierFactory    
+  }
+}
+
+In controller create var
+  // lazy means only initialize when someone wants to use it, a lazy cannot have a didset
+  lazy var game = Concentration(numberOfPairsOfCards: (cardButtons.count+1)/2)  // But better to not hard code # of cards
+
+change touchCard to do (game.chooseCard(at: CardNumber)), we now need to update view from model
+
+create function in viewController
+  func updateViewFromModel() {
+    for index in cardButtons.indices {  // indices creates a countable range for the arra
+      let button = cardButton[index]
+      let card = game.cards[index]
+      if card.isFaceUp {
+        button.setTitle(emoji(for: card), for: UIControlState.normal)
+        button.backgroundColor = ...
+      } else {
+        button.setTitle("", for: UIControlState.normal)
+        button.backgroundColor = ... 
+      }
+    }
+  }
+
+  // use dictionary, create it empty
+  var emojiChoices = ["a","b","c"..."z"]  / really have the faces
+  var emoji: Dictionary&lt;Int, String&gt;()  // or [Int:String]()
+
+  func emoji(for card: Card) -> String {
+    if emoji[card.identifier] != nil, emojiChoices.count > 0 {   // having multiple if's with, is like nested 
+      let randomIndex = Int(arc4random_uniform(UInt32(emojiChoices.count)))
+      emoji[card.identifier] = emojiChoices.remove(at: randomIndex)
+      return emoji[card.identifier]!
+    } else {
+       // Returns an optional string
+       return "?"  // for now return ?
+    }
+    // or can do return emoji[card.identifier] ?? "?"  this is the most common way to deal with optionals
+    // done since this logic is so common... if dictionary value is nil then it returns "?"
+</pre>

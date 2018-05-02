@@ -47,10 +47,23 @@ table, th, td {
 	color: white;
 }
 .didChange {
-	color: green;
+	color: white;
+  background-color: green;  
   font-weight: bold;
   font-style: italic;
 }
+.beingChangedB {
+  color: black;
+  background-color: yellow;
+  font-weight: bold;
+  font-style: italic;
+}
+.beingChangedS {
+  color: black;
+  background-color: yellow;
+  font-weight: bold;  
+}
+
 
 .outputFormat { 
      text-align: left; 
@@ -69,7 +82,8 @@ table, th, td {
 	text-align: right;
 }
 .review {
-	background-color: DarkGreen;
+  color: white;
+	background-color: blue;
 	color: yellow;
 }
 #section_IRP, #section_ComDoc, #section_FileRepository, #section_RMS, #section_MISC, #section_Legend {
@@ -112,6 +126,7 @@ table, th, td {
 <table class="legendDesc">
   <tr><td class="important">This is important</td></tr>
   <tr><td class="mustChange">Must make changes</td></tr>
+  <tr><td class="beingChangedB">Changes are currently in progress</td></tr>
   <tr><td class="didChange">Already changed code</td></tr>
   <tr><td class="inactive">Inactive here - ignore</td></tr>
   <tr><td class="same">Has been described earlier</td></tr>
@@ -592,7 +607,7 @@ There is a lot of common code between file repository and comdoc.</p>
 	     	   	  		 	  <li>Determines file extension (form get_file_extension)</li>
 	     	   	  		 	  <li>Calls function <a href="#alink_documents_create_dialog">
 	     	   	  		 	  	 alink_documents_create_dialog</a> to save the document
-	     	   	  		 	  	 in the content repo</li>
+	     	   	  		 	  	 in the content repo.  <span class="beingChangedB">Boris changing</span></li>
 	     	   	  		 	  <li>Inserts new record in ziv_prop_docs</li>
 	     	   	  		 	  <li>Calls function <a href="#z_ix_process_toa03">
 	     	   	  		 	      z_ix_process_toa03</a> to sync toa03 with ziv_prop_docs</li>
@@ -902,7 +917,7 @@ There is a lot of common code between file repository and comdoc.</p>
               changing: infiletab (we pass an empty table, type table of file_table)<br/>
               On return both outdoctab and infiletab have data, the document id is in it_outdoctab[1]-arc_doc_id, 
               the reserve field (in toa02) gets it_outdoctab[1]-doc_class.
-              <br/><span class="mustChange">This needs to be changed so doesn't call fm</span></li>
+              <br/><span class="beingChangedB">Change so doesn't call fm</span></li>
           <li>Uses data returned from above and builds work record, then calls function 
               <strong>z_ix_update_link_table</strong> to update tos02 table.</li>
     	  </ul>
@@ -968,8 +983,7 @@ class="review">General 'where used' search
         		  <a href="#z_ix_comdoc_attributes">z_ix_comdoc_attributes</a></li>
           <li>Calls function <a href="#alink_documents_create_dialog">
               alink_documents_create_dialog</a> that stores document in repo and
-              returns document id.  <span class="mustChange">This needs to be
-              changed</span></li>
+              returns document id.  <span class="beingChangedB">Change so doesn't call fm</span></li>
           <li>Calls form <a href="#zix_doc_content_manager$generate_container">generate_container</a>
               in zix_doc_content_manager to create container_id</li>
           <li>Based on caller_id it inserts record into zix_documents or ziv_prop_docs</li>
@@ -1027,7 +1041,7 @@ class="review">General 'where used' search
 		  <td>This function module displays the document to the user (i.e. launches the appropriate
 		  	  app/screen for it).  The only argument into this function is docId.  
 		  	  This function calls sap function <strong>bds_object_display_intern</strong>
-		  	  with the following parms.  <span class="mustChange">Needs to be changed</span>
+		  	  with the following parms.  <span class="didChange">Boris made changes</span>
         <ul>
         	<li>className     - If repoId is z2 then uses zix_documents-attachpoint else blank</li>  
         	<li>classType     - 'BO'</li>      	
@@ -1241,8 +1255,8 @@ class="review">General 'where used' search
 		<td id="alink_documents_create_dialog">alink_documents_create_dialog</td>
 		  <td>
         <ul>
-        	<li>This creates a document in the content repository.  <span class="mustChange">You shouldn't
-        	    see references in z* code after common modules implemented</span></li>        	
+        	<li>This creates a document in the content repository.  <span class="beingChangedB">Boris is working
+              on changes, we shouldn't see references in z* code after common modules implemented</span></li>        	
         </ul>
 		  </td>
   </tr>
@@ -1382,7 +1396,7 @@ class="review">General 'where used' search
         		  machine for the document requested; it's as if the document
         		  was opened from operating system (i.e. not from within a sap
         		  pane).  Pretty cool :)<br/>
-        	    <span class="mustChange">When we migrate to new objects you shouldn't see any 
+        	    <span class="didChange">When we migrate to new objects you shouldn't see any 
         	    references to this fm in our code</span></li>        	
         </ul>
 		  </td>
@@ -1442,7 +1456,7 @@ class="review">General 'where used' search
        	  <li>Gets data from zix_documents (by docid/container), ziv_sdel_people, sets bunch of
        	  	  attributes, fyi: <span class="important">calls split_path in oaall - should change</span></li>
        	  <li>Calls function module <a href="#alink_documents_create_dialog">alink_documents_create_dialog</a>
-       	      <span class="mustChange">Change this</span></li>
+       	      <span class="beingChangedB">Change so doesn't call fm</span></li>
           <li>Calls method zcl_ix_documents_utilities=>getFileDateTime to populate zix_documnts-document_date</li>
           <li>Calls form <a href="#zix_doc_content_manager$update_toa01">update_toa01</a></li>
           <li>Inserts record into zix_documents</li>
@@ -1667,7 +1681,7 @@ class="review">General 'where used' search
 	     	   	 <li>Determines file extension (form get_file_extension)</li>
 	     	   	 <li>Calls function <a href="#alink_documents_create_dialog">
 	     	   	   	 alink_documents_create_dialog</a> to save the document
-	     	   	   	 in the content repo <span class="mustChange">Change this</span></li>
+	     	   	   	 in the content repo <span class="beingChangedB">Change this</span></li>
 	     	   	 <li>Inserts new record in zi* table</li>
 	     	   	 <li>Inserts record in toa01 or calls function <a href="#z_ix_process_toa03">
 	     	   	  	z_ix_process_toa03</a> to sync toa03 (depends on doc loc)</li>

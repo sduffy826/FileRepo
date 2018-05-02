@@ -47,10 +47,10 @@ table, th, td {
 	color: white;
 }
 .didChange {
-	color: purple;
+	color: green;
+  font-weight: bold;
+  font-style: italic;
 }
-
-
 
 .outputFormat { 
      text-align: left; 
@@ -72,12 +72,12 @@ table, th, td {
 	background-color: DarkGreen;
 	color: yellow;
 }
-#section_IRP, #section_ComDoc, #section_FileRepository, #section_RMS, #section_MISC {
+#section_IRP, #section_ComDoc, #section_FileRepository, #section_RMS, #section_MISC, #section_Legend {
   background-color: #ffcc66;
   font-size: x-large;
   padding: 12px;
 }
-#section_CodeCommon, #section_CodeRMS {
+#section_CodeCommon, #section_CodeRMS, #section_CodeLegend {
   background-color: DarkOrange;
   font-size: large;
   padding: 10px;
@@ -95,6 +95,10 @@ table, th, td {
 	margin-left: 20px;
 	margin-bottom: 20px;
 }
+.legendDesc {
+  font-size: large;
+  padding: 7px;
+}
 
 </style>
 	
@@ -102,7 +106,23 @@ table, th, td {
 
 <body>
 <h3 id="modDate">April 25, 2018</h3>
-<p>Items in <span class="review">this color</span> need more review</p>
+
+<p>Various colors/highlighting is used to denote different this, before you start get 
+   aquanted with the legend</p>
+<table class="legendDesc">
+  <tr><td class="important">This is important</td></tr>
+  <tr><td class="mustChange">Must make changes</td></tr>
+  <tr><td class="didChange">Already changed code</td></tr>
+  <tr><td class="inactive">Inactive here - ignore</td></tr>
+  <tr><td class="same">Has been described earlier</td></tr>
+  <tr><td class="review">Needs more review</td></tr>
+  <tr><td id="section_Legend">App section (i.e. IRP, ComDoc...)</td></tr>
+  <tr><td id="section_CodeLegend">Code section</td></tr>
+  <tr><td class="ClassGroup">Classes</td></tr>
+  <tr><td class="FuncGroup">Function Groups</td></tr>
+  <tr><td class="Program">Programs</td></tr>
+</table>
+
 <!-- ======================================================================================= -->
 <hr />
 <h3>Proposal</h3>
@@ -214,7 +234,7 @@ table, th, td {
   <li><a href="#section_ComDoc">ComDoc</a></li>
   <li><a href="#section_FileRepository">File repository</a></li>
   <li><a href="#section_RMS">RMS</a></li>
-  <li><a href="#section_MISC">Miscellaneous Usage</a></li>
+  <li><a href="#section_MISC">Miscellaneous Usage (rdws, batch jobs etc...)</a></li>
 </ul>
 
 <h3>Additional Items</h3>
@@ -311,7 +331,8 @@ table, th, td {
           <li>zcl_ix_attachment=>createAttachment (gets args of crepId, filename, binary attachment)
             <ul>
               <li>Gets the mime type based on the filename passed in</li>
-              <li>Calls function module scms_http_create_table to create the document</li>
+              <li>Calls function module <a href="#scms_http_create_table">scms_http_create_table</a>
+                  to create the document</li>
             </ul>
             <strong class="mustChange">Change</strong> this method should be changed so that we
               don't call scms_http_create_table; see proposal</li>
@@ -351,7 +372,8 @@ table, th, td {
           <li class="same">zcl_ix_attachment=>createAttachment (gets args of crepId, filename, binary attachment)
             <ul>
               <li class="same">Gets the mime type based on the filename passed in</li>
-              <li class="same">Calls function module scms_http_create_table to create the document</li>
+              <li class="same">Calls function module <a href="#scms_http_create_table">
+                  scms_http_create_table</a> to create the document</li>
             </ul>
             <strong class="mustChange">Change</strong> this method should be changed so that we
               don't call scms_http_create_table; see proposal</li>
@@ -1297,6 +1319,36 @@ class="review">General 'where used' search
         	    <span class="mustChange">When we migrate to new objects you shouldn't see any 
         	    references to this fm in our code</span></li>        	
         </ul>
+        <table>
+          <tr><th>Where used</th><th>ParmType</th><th>Parm</th><th>Desc/Notes</th></tr>
+          <tr>
+            <td rowspan="4">method zcl_ix_attachment=>createAttachment</td>
+              <td>Exporting</td><td>crep_id</td><td>Repository id, arg passed into method (i.e. 'Z2')</td></tr>
+          <tr><td>Importing</td><td>doc_id_out</td><td>Document id of new doc</td></tr>
+          <tr><td>Tables</td><td>comps</td><td>Table of scms_comp, has elements<br/>
+                                               comps-name &lt;-- filename<br/>
+                                               comps-mimetype &lt;-- mime type of file (uses zcl_ix_documents_utilities=>getMimeTypeForFile to get)<br/>
+                                               comps-fsize &lt;-- size of attachment in bytes<br/>
+                                               comps-compid &lt;-- 'data'</td></tr>
+          <tr><td>Tables</td><td>data</td><td>Table with the binary file in it, it's type is
+                                              IWP_T_TBL1024</td></tr>
+          <tr><td colspan="4" class="didChange">
+              Change: modify code to call new method in class 'createAttachment_Int' to create the attachment</td></tr>
+
+          <tr><td colspan="4"></td></tr>
+          <tr>
+            <td rowspan="4">pgm: zix_document_edit, method c_office_document->save_document</td>
+              <td>Exporting</td><td>crep_id</td><td>Repository id</td></tr>
+          <tr><td>Importing</td><td>doc_id_out</td><td>Document id of new doc</td></tr>
+          <tr><td>Tables</td><td>comps</td><td>Table of scms_comp, only has elements<br/>
+                                               comps-fsize &lt;-- size of attachment in bytes<br/>
+                                               comps-compid &lt;-- 'data'</td></tr>
+          <tr><td>Tables</td><td>data</td><td>Table with the binary file in it, it's type is
+                                              table of TBL1024</td></tr>
+          <tr><td colspan="4" class="mustChange">
+              Need to deterine filename in code, called method zcl_ix_attachment=>createAttachment</td></tr>
+
+        </table>
 		  </td>
   </tr>
 

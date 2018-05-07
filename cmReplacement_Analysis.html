@@ -113,7 +113,9 @@ table, th, td {
   font-size: large;
   padding: 7px;
 }
-
+.testingNotes {
+  font-style: italic;
+}
 </style>
 	
 </HEAD>
@@ -131,6 +133,7 @@ table, th, td {
   <tr><td class="inactive">Inactive here - ignore</td></tr>
   <tr><td class="same">Has been described earlier</td></tr>
   <tr><td class="review">Needs more review</td></tr>
+  <tr><td class="tetingNotes">Testing notes</td></tr>
   <tr><td id="section_Legend">App section (i.e. IRP, ComDoc...)</td></tr>
   <tr><td id="section_CodeLegend">Code section</td></tr>
   <tr><td class="ClassGroup">Classes</td></tr>
@@ -332,25 +335,31 @@ table, th, td {
            <li>zcl_ix_irp_document->createNewDocument use the 'processObject' argument to get attributes,
                ('attachment' is attribute name, it's type xstring); it calls 
                zcl_ix_attachment=>createAttachmentFromXString to store attachment; it has
-               logic to update other tables (i.e zix_documents/linker tables)</li>
+               logic to update other tables (i.e zix_documents/linker tables)
+               <span class="didChange">Changed method to pass parm '_app' with a value of
+               'IRP' in method call of createAttachmentFromXString</span></li>
           <li>zcl_ix_attachment=>createAttachmentFromXString is passed the crepId (repo Id),
-              filename, and attachment; it:
+              filename, <span class="didChange">app</span> and attachment; it:
               <ul>
                 <li>converts the xString value to a binary table (type iwp_t_tbl1024)
                     by calling zcl_ix_attachment=>convertXStringToBinTab</li>
                 <li>it then calls zcl_ix_attachment=>createAttachment, passing in crepId, 
-                    filename and binary attachment.  That method (described below) returns
-                    the docid for the doc id created (which this method passes back to the caller)</li>
+                    filename, <span class="didChange">app</span> and binary attachment.  That method 
+                  (described below) returns the docid for the doc id created (which this method passes 
+                   back to the caller)</li>
               </ul>
           </li>
-          <li>zcl_ix_attachment=>createAttachment (gets args of crepId, filename, binary attachment)
+          <li>zcl_ix_attachment=>createAttachment (gets args of crepId, filename, <span class="didChange">app</span>
+                and binary attachment)
             <ul>
               <li>Gets the mime type based on the filename passed in</li>
               <li>Calls function module <a href="#scms_http_create_table">scms_http_create_table</a>
                   to create the document</li>
             </ul>
-            <strong class="mustChange">Change</strong> this method should be changed so that we
-              don't call scms_http_create_table; see proposal</li>
+            <span class="didChange">The createAttachment method now calls new protected
+               method createAttachment_Int to store the document (that method uses sap
+               function 'scms_doc_create' to store document in content repository (it
+               support multitude of crep's)</span></li>
         </ul>
     </td>
   </tr>
@@ -375,23 +384,22 @@ table, th, td {
                zcl_ix_attachment=>createAttachmentFromXString to store the attachment.  It
                also has logic to update other tables (i.e. zix_documents/linker).</li>
           <li class="same">zcl_ix_attachment=>createAttachmentFromXString is passed the crepId (repo Id),
-              filename, and attachment; it:
+              filename, app and attachment; it:
               <ul>
                 <li class="same">converts the xString value to a binary table (type iwp_t_tbl1024)
                     by calling zcl_ix_attachment=>convertXStringToBinTab</li>
                 <li class="same">it then calls zcl_ix_attachment=>createAttachment, passing in crepId, 
-                    filename and binary attachment.  That method (described below) returns
+                    filename, app and binary attachment.  That method (described below) returns
                     the docid for the doc id created (which this method passes back to the caller)</li>
               </ul>
           </li>
-          <li class="same">zcl_ix_attachment=>createAttachment (gets args of crepId, filename, binary attachment)
+          <li class="same">zcl_ix_attachment=>createAttachment (gets args of crepId, filename, app and binary attachment)
             <ul>
               <li class="same">Gets the mime type based on the filename passed in</li>
               <li class="same">Calls function module <a href="#scms_http_create_table">
                   scms_http_create_table</a> to create the document</li>
             </ul>
-            <strong class="mustChange">Change</strong> this method should be changed so that we
-              don't call scms_http_create_table; see proposal</li>
+            <span class="didChange">See desc (for UPATT) above</span></li>
         </ul>
     </td>
   </tr>
@@ -838,8 +846,15 @@ There is a lot of common code between file repository and comdoc.</p>
 		    	  	  <li>checks that file doesn't exist (uses form check_for_overwrite), will allow
 		    	  	  	  user to select to overwrite</li>
 		    	  	  <li>calls function <a href="#scms_ao_file_get_fe">scms_ao_file_get_fe</a> to
-		    	  	  	  retrieve file and write it to 'file_path_name' <span class="mustChange">
-		    	  	  	  Change this call</span></li>
+		    	  	  	  retrieve file and write it to 'file_path_name' <span class="didChange">
+                    Changed so uses new 'downloadAttachment' method, <span class="review">
+                    we don't have business area for RMS documents so coded literal 'RMS' as
+                    business area.  NOTE!! believe logic is also wrong, if the file exists
+                    on local machine than that file is launched, not the file in SAP... look
+                    at the logic (for display doens't prompt for overwrite and overwrite flag
+                    is Y so it doesn't detach file... just launches... WRONG!!!)</span>
+                    <span class="testingNotes">Test various files, also test to force an exception
+                    being thrown so that can test message logic</span></span></li>
 		    	  	  <li>calls method cl_gui_frontend_services=>execute, passing in 'file_path_name', this
 		    	  	  	  will launch the application that handles that type of file</li>
 		    	  	</ul>
@@ -870,7 +885,11 @@ There is a lot of common code between file repository and comdoc.</p>
 		    	      	  want to overwrite processing stops</li>
 		    	      <li>Next it calls <a href="#scms_ao_file_get_fe">scms_ao_file_get_fe</a> to retrieve
 		    	  	      document and store it at location user specified (name matches the name
-		    	  	      in sap).  <span class="mustChange">This needs to be changed</span></li>
+		    	  	      in sap).  <span class="didChange">Changed to use new downloadAttachment
+                    method <span class="review">this also is hardcoded for literal 'RMS' for
+                    the app parameter</span></span>
+                    <span class="testingNotes">Test this, also test to force an exception
+                    being thrown so that can test message logic</span></li>
 		    	  	</ul>
 		    	  </td>		    	  
 		      </tr>
@@ -956,6 +975,7 @@ class="review">General 'where used' search
   <tr>
   	<td class="review">RDWS - Attach</td>
   	  <td>Put desc</td>
+  </tr>
 </table>	
 
 
@@ -1051,7 +1071,8 @@ class="review">General 'where used' search
         	<li>bds_docid     - docId</li>
         	<li>bds_docuclass - gets file extension</li>
         </ul>
-		  </td>
+		  <span class="testNotes">Testing: get document id of docs you want to try and open, then
+        just execute this function module... it'll launch appropriate app with doc in it.</span></td>
   </tr>
 
   <tr>
@@ -1359,8 +1380,13 @@ class="review">General 'where used' search
                                                comps-compid &lt;-- 'data'</td></tr>
           <tr><td>Tables</td><td>data</td><td>Table with the binary file in it, it's type is
                                               table of TBL1024</td></tr>
-          <tr><td colspan="4" class="mustChange">
-              Need to deterine filename in code, called method zcl_ix_attachment=>createAttachment</td></tr>
+          <tr><td colspan="4" class="didChange">
+              Modified code in 'save_document' to call method zcl_ix_attachment=>createAttachment.
+              <span class="testingNotes">To test: (I put a breakpoint on the save_document method); 
+              find a 'word' document in 
+              zix_documents table, get it's docid, execute program
+              zix_document_edit, and put docd in parm... that'll bring up document in word.  Make a 
+              change to the document and save it.  Done :)</span></td></tr>
 
         </table>
 		  </td>
@@ -1434,7 +1460,8 @@ class="review">General 'where used' search
        	      be stored.  The name of the file exported is the same name as in sap.</li>
        	  <li>checks for overwriting file (prompts user if applicable)</li>
        	  <li>calls sap fm <a href="#scms_ao_file_get_fe">scms_ao_file_get_fe</a> to download file locally
-       	      <span class="mustChange">Needs changes here to use new methods</span></li>
+       	      <span class="didChange">Changed so it retrieves business_area (from zix_documents or 
+                ziv_prop_docs), calls new method zcl_ix_attachment->o->downloadAttachment...</span></li>
        	</ul>
 		</td>
   </tr>

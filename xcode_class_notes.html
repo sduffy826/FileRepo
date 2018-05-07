@@ -292,3 +292,28 @@ create function in viewController
     // or can do return emoji[card.identifier] ?? "?"  this is the most common way to deal with optionals
     // done since this logic is so common... if dictionary value is nil then it returns "?"
 </pre>
+
+
+
+<!-- ============================================================================================ -->
+<hr />
+<h3>class 3</h3>
+
+<h4>Demo auto layout demo</h4>
+<p>To have objects auto layout when you rotate you
+<ul>
+  <li>Need to embed them in a stack view - if you have a multi dimensional grid (i.e. rows/cols)
+      then you embed the rows in a horizontal stack view, then after that you group all the
+      rows in a vertical stack view.</li>
+  <li>Then pin the entire stack view to the edges; so select it, drag to blue lines, the
+      upper left corner.  Now pin - ctrl+drag to top; it'll ask for relationship, you
+      'top space to safe area' (safe area is safe area around screen where you can draw).
+      It'll draw a blue pining line - that's inspectable.  Do same to left area; then
+      you want to select 'leading space', do same to right, do 'trailing space'; in the
+      inspector change the constraint to same on the left (16 pts).  For bottom we
+      do 'flips first' we drag bottom and constrain it; to get it centered we drag
+      to middle and select 'center horizontally'.  We now need to do top of flips to
+      the bottom then do constain vertical spacing... change constraint to standard; and
+      change relation to 'greater than or equal'</li>
+</ul>
+</p>

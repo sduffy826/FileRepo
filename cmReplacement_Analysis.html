@@ -615,7 +615,7 @@ There is a lot of common code between file repository and comdoc.</p>
 	     	   	  		 	  <li>Determines file extension (form get_file_extension)</li>
 	     	   	  		 	  <li>Calls function <a href="#alink_documents_create_dialog">
 	     	   	  		 	  	 alink_documents_create_dialog</a> to save the document
-	     	   	  		 	  	 in the content repo.  <span class="beingChangedB">Boris changing</span></li>
+	     	   	  		 	  	 in the content repo.  <span class="didChange">Boris changed</span></li>
 	     	   	  		 	  <li>Inserts new record in ziv_prop_docs</li>
 	     	   	  		 	  <li>Calls function <a href="#z_ix_process_toa03">
 	     	   	  		 	      z_ix_process_toa03</a> to sync toa03 with ziv_prop_docs</li>
@@ -904,7 +904,7 @@ There is a lot of common code between file repository and comdoc.</p>
 		    'deleted' attributes set (deleted flag, date deleted etc...).  It does:
       <ul>
       	<li>Calls fm <a href="#archiv_delete_meta">archiv_delete_meta</a> to physically remove
-      		  the attachment from the content repository.  <span class="mustChange">This needs
+      		  the attachment from the content repository.  <span class="didChange">This needs
       		  to be changed</span></li>
       	<li>Updates the toa02 table with the work area passed in (remember deleted attributes are
       		  on in the work area)</li>
@@ -936,7 +936,7 @@ There is a lot of common code between file repository and comdoc.</p>
               changing: infiletab (we pass an empty table, type table of file_table)<br/>
               On return both outdoctab and infiletab have data, the document id is in it_outdoctab[1]-arc_doc_id, 
               the reserve field (in toa02) gets it_outdoctab[1]-doc_class.
-              <br/><span class="beingChangedB">Change so doesn't call fm</span></li>
+              <br/><span class="didChange">Change so doesn't call fm</span></li>
           <li>Uses data returned from above and builds work record, then calls function 
               <strong>z_ix_update_link_table</strong> to update tos02 table.</li>
     	  </ul>
@@ -1003,7 +1003,7 @@ class="review">General 'where used' search
         		  <a href="#z_ix_comdoc_attributes">z_ix_comdoc_attributes</a></li>
           <li>Calls function <a href="#alink_documents_create_dialog">
               alink_documents_create_dialog</a> that stores document in repo and
-              returns document id.  <span class="beingChangedB">Change so doesn't call fm</span></li>
+              returns document id.  <span class="didChange">Change so doesn't call fm</span></li>
           <li>Calls form <a href="#zix_doc_content_manager$generate_container">generate_container</a>
               in zix_doc_content_manager to create container_id</li>
           <li>Based on caller_id it inserts record into zix_documents or ziv_prop_docs</li>
@@ -1079,24 +1079,26 @@ class="review">General 'where used' search
   <td></td>
 		<td id="z_iv_edit_doc">z_iv_edit_doc</td>
 		  <td>This function module is called with the existing docId, it returns the
-		  	  newDocId.  Logic <span class="mustChange">Needs to be changed</span>
+		  	  newDocId.  Logic <span class="didChange">Needs to be changed</span>
         <ul>
         	<li>Calls program <a href="#zix_document_edit">
-        	    zix_document_edit</a> passing in docId</li>  
+        	    zix_document_edit</a> passing in docId.  Upon
+              return it continues with logic below</li>  
         	<li>If zix_document_edit created memory object for new docId
         	  <ul>
-        	    <li>Searchs toa01 for archiv_id Z2 and docId, if found then
+        	    <li>Searches toa01 for archiv_id Z2 and docId, if found then
         	    	<ul>
         	    		<li>it will call <a href="#archiv_delete_meta">archiv_delete_meta</a>
         	            to delete document, it'll then delete entry in table toa01.
-        	            <span class="mustChange">Change to use routine other than
-        	            fm call to archiv_delete_meta</span></li>
+        	            <span class="didChange">Removed logic here see note below.</span></li>
         	      </ul>
         	      else if not found
         	      <ul>
-        	    		<li>it will call <a href="#z_ix_process_toa03">z_ix_process_toa03</a></li>
+        	    		<li>it will call <a href="#z_ix_process_toa03">z_ix_process_toa03</a>
+                  <span class="didChange">Removed this see note below</span></li>
         	      </ul>
-        	    </li>
+        	    <span class="didChange">Removed linker table logic here, I put it in
+              the zix_document_edit program.</span></li>
         	  </ul>
         	</li>
         </ul>
@@ -1236,8 +1238,9 @@ class="review">General 'where used' search
         <a href="#archiv_delete_meta">archiv_delete_meta</a>
         is called (this deletes the attachment from the content
         repository), after that the record is physically deleted from the 
-        toa0x table. <span class="mustChange">Change this code so that
-        it uses something else other than archiv_delete_meta</span><br/>
+        toa0x table. <span class="didChange">Change this code so that
+        it uses the new deleteAttachment method in the zcl_ix_attachment
+        class (instead of fm archiv_delete_meta)</span><br/>
         Note if record was previously masked then the update will
         not occur unless _forceMaskUpd is Y.</td>
   </tr>
@@ -1276,7 +1279,7 @@ class="review">General 'where used' search
 		<td id="alink_documents_create_dialog">alink_documents_create_dialog</td>
 		  <td>
         <ul>
-        	<li>This creates a document in the content repository.  <span class="beingChangedB">Boris is working
+        	<li>This creates a document in the content repository.  <span class="didChange">Boris is working
               on changes, we shouldn't see references in z* code after common modules implemented</span></li>        	
         </ul>
 		  </td>
@@ -1477,20 +1480,21 @@ class="review">General 'where used' search
   <tr>
   	<td></td>
 		<td id="zix_doc_content_manager$replace_doc">form: <strong>replace_doc</strong></td>
-		<td>Form is passed several parms using: filename, changing: saveFlag(char1), oldDoc(zix_documents), docDomainName
-			  <span class="mustChange">This needs to change</span>
+		<td>Form is passed several parms using: filename, changing: saveFlag(char1), oldDoc(zix_documents), docDomainName			  
        <ul>
        	  <li>Gets data from zix_documents (by docid/container), ziv_sdel_people, sets bunch of
        	  	  attributes, fyi: <span class="important">calls split_path in oaall - should change</span></li>
        	  <li>Calls function module <a href="#alink_documents_create_dialog">alink_documents_create_dialog</a>
-       	      <span class="beingChangedB">Change so doesn't call fm</span></li>
+       	      <span class="didChange">Change so doesn't call fm</span></li>
           <li>Calls method zcl_ix_documents_utilities=>getFileDateTime to populate zix_documnts-document_date</li>
-          <li>Calls form <a href="#zix_doc_content_manager$update_toa01">update_toa01</a></li>
+          <li>Calls form <a href="#zix_doc_content_manager$update_toa01">update_toa01</a> 
+              <span class="didChange">Changed to use fm z_ix_process_toa01 instead</span></li>
           <li>Inserts record into zix_documents</li>
           <li>It will then call fn <a href="#archiv_delete_meta">archiv_delete_meta</a> for the old docId, and will
-          	  delete old docId record from zix_documents, toa01 <span class="mustChange">change fm call on
-          	  archiv_delete_meta to something else</span></li>
-          <li>Will call form <a href="#zix_doc_content_manager$update_attributes_and_tree">
+          	  delete old docId record from zix_documents, toa01 <span class="didChange">Changed by removing
+              call to archiv_delete_meta and replace it with call to fm z_ix_process_toa01; also removed code
+              that deleted record from toa01 since fm handles that</span></li>
+          <li>Will call form <a href="#zix_doc_content_manager$update_attributes_and_tree"> 
               update_attributes_and_tree</a></li>
        </ul>
 		</td>
@@ -1500,7 +1504,8 @@ class="review">General 'where used' search
   	<td></td>
 		<td id="zix_doc_content_manager$update_toa01">form: <strong>update_toa01</strong></td>
 		<td>This updates the linker table toa01 with the data from zix_documents, ziv_sdel_people table.  
-		    <span class="important">Function Z_IX_PROCESS_TOA01 should be used instead of this form</span></td>
+		    <span class="didChange">I removed this form and callers of it were changed so that they
+        call fm Z_IX_PROCESS_TOA01</span></td>
   </tr>
 
   <tr>
@@ -1510,7 +1515,7 @@ class="review">General 'where used' search
 		<td>Calls function <a href="#z_ix_comdoc_attributes">z_ix_comdoc_attributes</a>
 			  to get attributes.  It calls form <a href="#zix_doc_content_manager$update_attcon">
 			  update_attcon</a>, has contracts for document.  It updates the zix_documents
-			  table, the toa01 table <span class="important">should use z_ix_process_toa01</span></td>
+			  table, the toa01 table <span class="didChange">Changed to use z_ix_process_toa01</span></td>
   </tr>
 
   <tr>
@@ -1530,8 +1535,6 @@ class="review">General 'where used' search
 			  the zix_doc_attcon table has column docid but it appears that the value
 			  is really the container id.</td>
   </tr>
-
-
 
 
   <!-- ============================================== PGM: ZIX_DOC_SEARCH_GRP ========================= -->
@@ -1587,14 +1590,15 @@ class="review">General 'where used' search
 				<dt>REPLACE</dt>
 				  <dd>calls form 'replace', that form does
 				  	<ul>
-				  		<li class="mustChange">This needs changing</li>
 				  		<li>performs form <a href="#zix_doc_content_manager$replace_authority">
 				  		    replace_authority</a>	in program zix_content_manager (auth checking)</li>
 				  		<li>calls method cl_gui_frontend_services=>file_open_dialog to get file</li>
 				  		<li>performs form <a href="#zix_doc_content_manager$replace_doc">
 				  		    replace_doc</a>	in program zix_content_manager.</li>
-				  		<li><span class="important">Not sure why</span> but this updates
-				  			  zix_doc_domain table (not other zi* ones), weird, research more</li>
+				  		<li><span class="important">It updates
+				  			  zix_doc_domain table here, other zi* tables are updated 
+                  in the replace_doc form of zix_doc_content_manager... weird that
+                  it's coded this way</span></li>
             </ul>
 				  </dd>
 				<dt>HISTORY</dt>
@@ -1630,7 +1634,10 @@ class="review">General 'where used' search
          	    	  tables (toa0n) and delete the old records <span class="important">does not
          	    	  appear to delete old attachment; also the call to scms_doc_create is
          	    	  strange as it doesn't reference repository id but uses 'stor_cat'; since
-         	    	  replacing probably not worth time researching more</span></li>
+         	    	  replacing probably not worth time researching more</span>
+                  <span class="didChange">Changed call to form update_toa01 in zix_doc_content_manager
+                  to now use fm z_ix_process_toa01</span>
+                  <span class="mustChange">Document boris's changes in this code</span></li>
          	  </ul>
          </li>
          <li>else if extension is not TXT
@@ -1648,6 +1655,8 @@ class="review">General 'where used' search
          	  		  the zi* tables and linker tables</li>
            </ul>
          </li>
+         <li><span class="didChange">Changed code so calls z_ix_process_toa0N to handle the
+             updates to toa01/3 and also to delete attachments (spd20180508)</span></li>
       </ul>
 		</td>
 	</tr>
@@ -1688,7 +1697,9 @@ class="review">General 'where used' search
       				 	   it'll update zi* table if changed attribute</li>
       				 <li>Updates linker table toa01 or calls
       				 	   function <a href="#z_ix_process_toa03">
-      				 	   z_ix_process_toa03</a> (depending on doc type)</li>
+      				 	   z_ix_process_toa03</a> (depending on doc type)
+                   <span class="didChange">Changed to call z_ix_process_toa01 instead of direct
+                   updates to toa01</span></li>
       			</ul>
       		</li>
       	</ul>
@@ -1708,13 +1719,15 @@ class="review">General 'where used' search
 	     	   	 <li>Determines file extension (form get_file_extension)</li>
 	     	   	 <li>Calls function <a href="#alink_documents_create_dialog">
 	     	   	   	 alink_documents_create_dialog</a> to save the document
-	     	   	   	 in the content repo <span class="beingChangedB">Change this</span></li>
+	     	   	   	 in the content repo <span class="didChange">Change this</span></li>
 	     	   	 <li>Inserts new record in zi* table</li>
 	     	   	 <li>Inserts record in toa01 or calls function <a href="#z_ix_process_toa03">
-	     	   	  	z_ix_process_toa03</a> to sync toa03 (depends on doc loc)</li>
+	     	   	  	z_ix_process_toa03</a> to sync toa03 (depends on doc loc)
+                <span class="didChange">have it calling z_ix_process_toa01 now for toa01 tbl</span></li>
 	      	 	  <li>Deletes old record from zi* table and calls function
-	     		 	  	  z_ix_process_toa03 if it's a prop docs record.  <span class="important">
-	     		 	  	  doesn't update toa01 though, should fix</span></li>
+	     		 	  	  z_ix_process_toa03 if it's a prop docs record.  <span class="didChange">
+                  Changed so that it calls z_ix_process_toa01 if a record in zix_documents</span>
+	     		 	  </li>
 	     	  </ul>
 	     	  </li>
 	     	  <li>Asks user if they want to change attributes, if so it'll update
@@ -1752,7 +1765,9 @@ class="review">General 'where used' search
           <li>Sets deleted flag in zi* table</li>
           <li>Updates table toa01 or calls fm
           	  <a href="#z_ix_process_toa03">z_ix_process_toa03</a>
-          	  depending on prop docs (or zix_docs) record</li>          
+          	  depending on prop docs (or zix_docs) record
+              <span class="didChange">Changed to call z_ix_process_toa01 instead
+              of direct toa01 table updates</span></li>          
       	</ul>
       </td></tr>
   <tr><td></td>
@@ -1763,7 +1778,9 @@ class="review">General 'where used' search
            <li>Calls function <a href="#z_ix_comdoc_attributes">z_ix_comdoc_attributes
                </a> passing in mode of 'D'.  If function module returns action of 'A' 
                then the data in zi* table will be updated and fm 
-               <a href="#z_ix_process_toa03">z_ix_process_toa03</a> is called</li>
+               <a href="#z_ix_process_toa03">z_ix_process_toa03</a> is called
+               <span class="didChange">Changed to call z_ix_process_toa01, in past it
+               didn't update toa01 with changes user made</span></li>
 	      </ul>
 	    </td>
 	</tr>
@@ -1775,7 +1792,8 @@ class="review">General 'where used' search
       		<li>Updates vis_outside_sale column in ziv_prop_docs</li>
           <li>Calls fm
           	  <a href="#z_ix_process_toa03">z_ix_process_toa03</a>
-          	  to sync data in toa03</li>          
+          	  to sync data in toa03 (no toa01 updates since this option
+              only avail on ziv_prop_doc docs)</li>          
       	</ul>
       </td></tr>
   <tr><td></td>

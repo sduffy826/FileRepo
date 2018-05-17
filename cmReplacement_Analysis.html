@@ -63,7 +63,10 @@ table, th, td {
   background-color: yellow;
   font-weight: bold;  
 }
-
+.future {
+  color: white;
+  background-color: purple;
+}
 
 .outputFormat { 
      text-align: left; 
@@ -85,6 +88,10 @@ table, th, td {
   color: white;
 	background-color: blue;
 	color: yellow;
+}
+.reviewed {
+  color: blue;
+  background-color: #FEEFEF;
 }
 #section_IRP, #section_ComDoc, #section_FileRepository, #section_RMS, #section_MISC, #section_Legend {
   background-color: #ffcc66;
@@ -115,7 +122,24 @@ table, th, td {
 }
 .testingNotes {
   font-style: italic;
+  background-color: LightGray;
 }
+
+#genNotes {
+  border-style: solid;
+  border-width: 1px;
+  border-color: black;
+  padding: 2px;
+  background: #FEEFEF;
+}
+#genNotes ul {
+  list-style-type: none;
+  
+  margin: 0;
+  padding: 0;
+  padding-left: 10px;
+}
+
 </style>
 	
 </HEAD>
@@ -130,10 +154,11 @@ table, th, td {
   <tr><td class="mustChange">Must make changes</td></tr>
   <tr><td class="beingChangedB">Changes are currently in progress</td></tr>
   <tr><td class="didChange">Already changed code</td></tr>
+  <tr><td class="future">Change in the future</td></tr>
   <tr><td class="inactive">Inactive here - ignore</td></tr>
   <tr><td class="same">Has been described earlier</td></tr>
   <tr><td class="review">Needs more review</td></tr>
-  <tr><td class="tetingNotes">Testing notes</td></tr>
+  <tr><td class="testingNotes">Testing notes</td></tr>
   <tr><td id="section_Legend">App section (i.e. IRP, ComDoc...)</td></tr>
   <tr><td id="section_CodeLegend">Code section</td></tr>
   <tr><td class="ClassGroup">Classes</td></tr>
@@ -305,7 +330,8 @@ table, th, td {
     <td>DNATT</td>
     <td>Download Attachment</td>
     <td>Download</td>
-    <td>Calls method zcl_ix_attachment=&gt;getAttachmentAsXString passes crep_id = 'Z2', filename, docid, get back attachment as xString</td>
+    <td>Calls method zcl_ix_attachment=&gt;getAttachmentAsXString passes crep_id = 'Z2', filename, docid, 
+        get back attachment as xString</td>
   </tr>
 </table>
 
@@ -445,7 +471,7 @@ table, th, td {
                   <li>It uses mime type, crep_id and docid and calls function ARCHIVEOBJECT_GET_TABLE.
                       That function returns the binary object (type iwp_t_tbl1024) its length, the fm
                       also returns the parms we don't use on this path (archivObject and length).
-                      <span class="mustChange">call to ARCHIVEOBJECT_GET_TABLE will probably need to be 
+                      <span class="didChange">call to ARCHIVEOBJECT_GET_TABLE will probably need to be 
                       changed</span></li>
                 </ul>
                <li>method zcl_ix_attachment=>convertBinTabToXString logic</li>
@@ -615,7 +641,7 @@ There is a lot of common code between file repository and comdoc.</p>
 	     	   	  		 	  <li>Determines file extension (form get_file_extension)</li>
 	     	   	  		 	  <li>Calls function <a href="#alink_documents_create_dialog">
 	     	   	  		 	  	 alink_documents_create_dialog</a> to save the document
-	     	   	  		 	  	 in the content repo.  <span class="didChange">Boris changed</span></li>
+	     	   	  		 	  	 in the content repo.  <span class="didChange">Needs to be changed</span></li>
 	     	   	  		 	  <li>Inserts new record in ziv_prop_docs</li>
 	     	   	  		 	  <li>Calls function <a href="#z_ix_process_toa03">
 	     	   	  		 	      z_ix_process_toa03</a> to sync toa03 with ziv_prop_docs</li>
@@ -706,7 +732,17 @@ There is a lot of common code between file repository and comdoc.</p>
 <hr/>
 <h3 id="section_RMS">RMS - Request Management System</h3>
 <p>Handles request for capital and expense expenditures (i.e. buying equipment).  This is not documentation
-	 about RMS; it was geard toward finding out how attachments are handled in it.</p>
+	 about RMS; it was geard toward finding out how attachments are handled in it. </p>
+<div id="genNotes">   
+<strong>General Notes:</strong>
+<ul>
+  <li>Meta data for attachments are stored in toa02</li>
+  <li>Uses repo ZX</li>
+  <li>toa02 records have sap_object = 'ZIX_RMS', the object_id is the sap_request_num
+      from the associated record in zix_wb_req_detl</li>  
+</ul>
+</div>  
+
 <ul>
 	<li>Transaction <strong>zix_req</strong> (pgm sapmzixwb screen 9100) brings user into search screen</li>
 	  <ul>
@@ -720,8 +756,13 @@ There is a lot of common code between file repository and comdoc.</p>
 	      	    change (M), display (D) or renew (R) request.  That fm puts up
 	      	    the detail screen (more in link).</dd>	      
 	      <dt>DELETE</dt>
-	        <dd>Does not appear to do anything with attachments <span class="important">Verify this 
-	        	  with testing</span>.  It deletes records from following tables:
+	        <dd>Does not appear to do anything with attachments <span class="testingNotes">to
+              test I created a capital request, added attachments, verified entries in
+              toa02, zix_wb_req_detl and then deleted entry.  Note delete only available
+              for capital requests.</span> <span class="future">Verified that 
+              it doesn't delete attachment or set the 'deleted attributes' in the toa02 table, we
+              should change it down the road to set the deleted attributes in that table</span>
+	        	  It deletes records from following tables:
 	        	  zix_wb_req_detl, zix_wb_contractr, zix_wb_multisite and zix_wb_contracts</dd>
 	      <dt>ADD_ATTACH</dt>
 	        <dd>calls form 
@@ -731,11 +772,6 @@ There is a lot of common code between file repository and comdoc.</p>
 	    </dl>
 	  </ul>
 </ul>
-
-<h4>Misc info</h4>
-<p>Attachment attributes are stored in table toa02
-    The process attachments form creates an object (z_ix_attachments), that object calls
-</p>
 
 <hr />
 <h3 id="section_CodeRMS">Description of RMS routines (think only used in rms so not in common sect)</h3>
@@ -848,8 +884,8 @@ There is a lot of common code between file repository and comdoc.</p>
 		    	  	  <li>calls function <a href="#scms_ao_file_get_fe">scms_ao_file_get_fe</a> to
 		    	  	  	  retrieve file and write it to 'file_path_name' <span class="didChange">
                     Changed so uses new 'downloadAttachment' method, <span class="review">
-                    we don't have business area for RMS documents so coded literal 'RMS' as
-                    business area.  NOTE!! believe logic is also wrong, if the file exists
+                    we use toa02-sap_object as business area.
+                    NOTE!! believe logic is also wrong, if the file exists
                     on local machine than that file is launched, not the file in SAP... look
                     at the logic (for display doens't prompt for overwrite and overwrite flag
                     is Y so it doesn't detach file... just launches... WRONG!!!)</span>
@@ -865,9 +901,7 @@ There is a lot of common code between file repository and comdoc.</p>
             <td>DELETE</td>
 		    	  <td>It prompts the user to confirm the delete, if they want
 		    	  	 to delete then it'll write the record to table it_del_toa02 (that has
-		    	  	 record from toa02), <span class="important">think potential problem here
-		    	  	 as it_del_toa02 is a function group variable, can test with two 
-		    	  	separate session</span>.  It also removes the record from the alv
+		    	  	 record from toa02).  It also removes the record from the alv
 		    	    grid.<br/>
 		    	    <strong>Note:</strong> the records won't be deleted till later, when
 		    	    the user closes dialog and it executes code in 'CONTINUE' fcode.</td>
@@ -886,8 +920,7 @@ There is a lot of common code between file repository and comdoc.</p>
 		    	      <li>Next it calls <a href="#scms_ao_file_get_fe">scms_ao_file_get_fe</a> to retrieve
 		    	  	      document and store it at location user specified (name matches the name
 		    	  	      in sap).  <span class="didChange">Changed to use new downloadAttachment
-                    method <span class="review">this also is hardcoded for literal 'RMS' for
-                    the app parameter</span></span>
+                    method</span>
                     <span class="testingNotes">Test this, also test to force an exception
                     being thrown so that can test message logic</span></li>
 		    	  	</ul>
@@ -904,8 +937,8 @@ There is a lot of common code between file repository and comdoc.</p>
 		    'deleted' attributes set (deleted flag, date deleted etc...).  It does:
       <ul>
       	<li>Calls fm <a href="#archiv_delete_meta">archiv_delete_meta</a> to physically remove
-      		  the attachment from the content repository.  <span class="didChange">This needs
-      		  to be changed</span></li>
+      		  the attachment from the content repository.  <span class="didChange">Changed to use
+            new methods/logic</span></li>
       	<li>Updates the toa02 table with the work area passed in (remember deleted attributes are
       		  on in the work area)</li>
       </ul>
@@ -954,11 +987,6 @@ There is a lot of common code between file repository and comdoc.</p>
 
 
 
-class="review">General 'where used' search
-
-
-
-
 
 
 <!-- ============================================== SECTION: RMS ============================================== -->
@@ -967,14 +995,20 @@ class="review">General 'where used' search
 <p>This section is for miscellaneous attachment usage/references.</p>
 <table>
   <tr>
-  	<td class="review">Batch program - zix_doc_delete</td>
-  	  <td>This program is run as a batch program under job name <strong>zi_xd_zix_doc_delete</strong>.  
-  	  </td>
+  	<td>Batch program - zix_doc_delete</td>
+  	  <td>This program is run as a batch program under job name <strong>zi_xd_zix_doc_delete</strong>.
+          <span class="didChange">Changed fm call archiv_delete_meta to use the
+          common method 'deleteAttachment'</span></td>
   </tr>
 
   <tr>
-  	<td class="review">RDWS - Attach</td>
-  	  <td>Put desc</td>
+  	<td>RDWS - Attach</td>
+  	  <td><span class="didChange">Verified with David:</span> Believe that the mq rdws interface
+        calls function module Z_IX_ATTACH_DOCUMENT_ITAB. There are several places needing
+        changes (in fm and subroutine process_file_name)<span class="didChange">Changed 
+        to use common methods, changed logic in process_file_name to delete from zix_documents
+        and then call the z_ix_process_toa01 fm to handle the rest... left old form there
+        for reference</span></td>
   </tr>
 </table>	
 
@@ -1029,6 +1063,18 @@ class="review">General 'where used' search
 		  </td>
   </tr>
 
+  <tr>
+    <td></td>
+    <td id="z_iv_documents_delete_file">z_iv_documents_delete_file</td>
+      <td>
+        <ul>
+          <li class="didChange">Had reference to <a href="archiv_delete_meta">
+              archiv_delete_meta</a>, changed to use new deleteAttachment
+            method instead.</li>
+        </ul>
+      </td>
+  </tr>
+
   
 
   <!-- ============================================== FG: ZIX_COMDOC ================================== -->
@@ -1061,7 +1107,9 @@ class="review">General 'where used' search
 		  <td>This function module displays the document to the user (i.e. launches the appropriate
 		  	  app/screen for it).  The only argument into this function is docId.  
 		  	  This function calls sap function <strong>bds_object_display_intern</strong>
-		  	  with the following parms.  <span class="didChange">Boris made changes</span>
+		  	  with the following parms.  <span class="didChange">Needs to be changed, we are
+          still using bds_object_display_intern but other changes were necessary to support
+          migration</span>
         <ul>
         	<li>className     - If repoId is z2 then uses zix_documents-attachpoint else blank</li>  
         	<li>classType     - 'BO'</li>      	
@@ -1095,7 +1143,7 @@ class="review">General 'where used' search
         	      else if not found
         	      <ul>
         	    		<li>it will call <a href="#z_ix_process_toa03">z_ix_process_toa03</a>
-                  <span class="didChange">Removed this see note below</span></li>
+                      <span class="didChange">Removed this see note below</span></li>
         	      </ul>
         	    <span class="didChange">Removed linker table logic here, I put it in
               the zix_document_edit program.</span></li>
@@ -1279,8 +1327,8 @@ class="review">General 'where used' search
 		<td id="alink_documents_create_dialog">alink_documents_create_dialog</td>
 		  <td>
         <ul>
-        	<li>This creates a document in the content repository.  <span class="didChange">Boris is working
-              on changes, we shouldn't see references in z* code after common modules implemented</span></li>        	
+        	<li>This creates a document in the content repository.  <span class="mustChange">We shouldn't see 
+          references in z* code after common modules implemented</span></li>        	
         </ul>
 		  </td>
   </tr>
@@ -1297,8 +1345,16 @@ class="review">General 'where used' search
 		  <td>
         <ul>
         	<li>This function module is used to delete the attachment from the content
-        	    repository.  <span class="mustChange">We'll need similar 'common method' but
-        	    we shouldn't have references to this after migration</span></li>        	
+        	    repository.  <span class="didChange">Replaced with the deleteAttachment
+              method in zcl_ix_attachments class; did where used and don't see 
+              outstanding references that need changing (20180509)</span>
+             <ul class="reviewed">
+                <li>Referenced in class zcl_arl_al_item, but this only exists in ii0 (Doug McIntyre),
+                    date is 2007 so assume it's 'play code'; no action required</li>
+                <li>Found reference in <a href="#z_iv_documents_delete_file">z_iv_documents_delete_file</a>
+                so modified that fm</li>
+             </ul>
+          </li>        	
         </ul>
 		  </td>
   </tr>
@@ -1317,7 +1373,15 @@ class="review">General 'where used' search
         	<li>This returns the document as table(s) of data; say tables cause it returns a table
         	    in char 1024 format and also a table of raw data in 1024 format.  
         	    <span class="mustChange">When we migrate to new objects you shouldn't see any 
-        	    references to this fm in our code</span></li>        	
+        	    references to this fm in our code</span></li>  
+              <ul class="reviewed">
+                <li>Found call in fm Z_IX_ACHIVOBJECT_GET_VIA_TABLE, that code looks dead so I put
+                    in an 'assert' which will cause an abap dump if it is</li>      	
+                <li>Found form 'displaySAPOld in zix_document_utilities function group, the code
+                    was dead so removed it (it had call to archiveobject_get_table)</li>
+                <li>Found changes needed in program ZIX_EMAIL_FAX_DOCUMENTS$$$$$
+                    <span class="mustChange"> fix/test update prologue</span> </li>
+              </ul>              
         </ul>
 		  </td>
   </tr>
@@ -1394,6 +1458,19 @@ class="review">General 'where used' search
         </table>
 		  </td>
   </tr>
+
+  <tr>
+    <td></td>
+    <td id="scms_http_delete">scms_http_delete</td>
+      <td>
+        <ul>
+          <li>This fm is provided by sap, it delets a document from a repository.
+              <span class="mustChange">When we migrate to new objects you shouldn't see any 
+              references to this fm in our code</span></li>         
+        </ul>        
+      </td>
+  </tr>
+
 
   <!-- ============================================== FG: SCMS_AO_API (SAP CODE) ====================== -->
   <tr>	
@@ -1474,7 +1551,7 @@ class="review">General 'where used' search
 		<td id="zix_doc_content_manager$replace_authority">form: <strong>replace_authority</strong></td>
 		<td>Form gets person key from ziv_sdel_people for sy-uname <span class="important">Should change to only
 			  look at 'A'ctive status</span>.  It then checks users authorization and returns flag for the
-			caller to interrogate</td>
+			caller to interrogate <span class="didChange">Changed to only look at status 'A' people records</span></td>
   </tr>
 
   <tr>
@@ -1624,38 +1701,38 @@ class="review">General 'where used' search
          	  <ul>
          	  	<li>it calls function <a href="#archivobject_get_table">archivobject_get_table</a>
          	  		  to get file contents as table of 1024 byte characters (return parm archivobject)
-         	  	    <span class="mustChange">Needs changes</span></li>
+         	  	    <span class="didChange">Needs changes</span></li>
          	    <li>Calls function <a href="#z_iv_edit_text">z_iv_edit_text</a>, that puts up
          	    	  the text file on the screen and allows user to change it.</li>
          	    <li>If users saves text then it will call function 
          	    	  <a href="#scms_doc_create">scms_doc_create</a> 
-         	    	  to save the document <span class="mustChange">change this</span>.  It will also
+         	    	  to save the document <span class="didChange">change this</span>.  It will also
          	    	  insert new records into zix_documents, ziv_prop_docs, zix_doc_domain, linker
          	    	  tables (toa0n) and delete the old records <span class="important">does not
          	    	  appear to delete old attachment; also the call to scms_doc_create is
          	    	  strange as it doesn't reference repository id but uses 'stor_cat'; since
          	    	  replacing probably not worth time researching more</span>
                   <span class="didChange">Changed call to form update_toa01 in zix_doc_content_manager
-                  to now use fm z_ix_process_toa01</span>
-                  <span class="mustChange">Document boris's changes in this code</span></li>
+                  to now use fm z_ix_process_toa01, that handles delete</span>
+              </li>
          	  </ul>
          </li>
          <li>else if extension is not TXT
            <ul>
          	  	<li>it calls function <a href="#archivobject_get_table">archivobject_get_table</a>
          	  		  to get file contents as table of 1024 byte 'raw' data (return parm binarchivobject)
-         	  		  <span class="mustChange">Change this</span></li>
+         	  		  <span class="didChange">Change this</span></li>
          	  	<li>It uses file extension to map to document type (local form create_document); this
          	  		  sets type to things like Word.Document, Excel.Sheet...</li>
          	  	<li>It has local class (c_office_document) to allow user to edit document
          	  		  by launching application.</li>
          	  	<li>On save it calls method c_office_document->save_document; that calls
          	  		  function <a href="#scms_http_create_table">scms_http_create_table</a>
-         	  		  <span class="mustChange">Changes needed here</span> it then updates
+         	  		  <span class="didChange">Changes needed here</span> it then updates
          	  		  the zi* tables and linker tables</li>
            </ul>
          </li>
-         <li><span class="didChange">Changed code so calls z_ix_process_toa0N to handle the
+         <li>Overall note: <span class="didChange">Changed code so calls z_ix_process_toa0N to handle the
              updates to toa01/3 and also to delete attachments (spd20180508)</span></li>
       </ul>
 		</td>

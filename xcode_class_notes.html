@@ -299,12 +299,12 @@ create function in viewController
 <hr />
 <h3>class 3</h3>
 
-<h4>Demo auto layout demo</h4>
+<h4>Demo auto layout(teaser) demo</h4>
 <p>To have objects auto layout when you rotate you
 <ul>
   <li>Need to embed them in a stack view - if you have a multi dimensional grid (i.e. rows/cols)
       then you embed the rows in a horizontal stack view, then after that you group all the
-      rows in a vertical stack view.</li>
+      rows in a vertical stack view.  (the embed in stack is icon on bottom of screen)</li>
   <li>Then pin the entire stack view to the edges; so select it, drag to blue lines, the
       upper left corner.  Now pin - ctrl+drag to top; it'll ask for relationship, you
       'top space to safe area' (safe area is safe area around screen where you can draw).
@@ -317,3 +317,33 @@ create function in viewController
       change relation to 'greater than or equal'</li>
 </ul>
 </p>
+
+standard spacing orizontally
+
+fyi:
+rotate hardware-rotate left/right, or can use command and arrows
+easier to see blue lines with white background
+
+stackview takes other views and groups together, 6 mins into class 3 video
+
+stride is global function from 
+stride(from: 0.5, through: 15.25, by: 0.3) this creates a countable range that you can
+use in a for loop.
+
+tuple is like a mini struct, just has values in them
+let x: (String, Int, Double) = ("Hellow",5,0.8)
+you can define names when use
+let (word, number, value) = x
+or when you assign it
+let x: (w: String, i: Int, v: Double) = ("hello", 5, 0.5)
+then can ref like
+print(x.w) 
+
+you can still redeclare the names
+let (wrd, num, val) = x
+
+Tuples are good for return multiple values from a function
+
+
+
+

@@ -331,7 +331,9 @@ table, th, td {
     <td>Download Attachment</td>
     <td>Download</td>
     <td>Calls method zcl_ix_attachment=&gt;getAttachmentAsXString passes crep_id = 'Z2', filename, docid, 
-        get back attachment as xString</td>
+        get back attachment as xString <span class="didChange">Changed to support app parm on getAttach*
+        method, to do this I added a new method on zcl_ix_irp_document->getBusinessArea to return
+        the business area... that's the value used for the 'app' parm.</span></td>
   </tr>
 </table>
 
@@ -363,7 +365,7 @@ table, th, td {
                zcl_ix_attachment=>createAttachmentFromXString to store attachment; it has
                logic to update other tables (i.e zix_documents/linker tables)
                <span class="didChange">Changed method to pass parm '_app' with a value of
-               'IRP' in method call of createAttachmentFromXString</span></li>
+               document->business_area in method call of createAttachmentFromXString</span></li>
           <li>zcl_ix_attachment=>createAttachmentFromXString is passed the crepId (repo Id),
               filename, <span class="didChange">app</span> and attachment; it:
               <ul>
@@ -408,7 +410,12 @@ table, th, td {
            <li>zcl_ix_irp_document->createNewVersion uses attributes from the document on file, and
                the 'processObject' argument to set attributes, it calls
                zcl_ix_attachment=>createAttachmentFromXString to store the attachment.  It
-               also has logic to update other tables (i.e. zix_documents/linker).</li>
+               also has logic to update other tables (i.e. zix_documents/linker).
+               <span class="didChange">Like 'createNewDocument' it was changed so that
+               it passes parm '_app' (has doc->business_area) to method calls for creating
+               attachments (in class zcl_ix_attachment)</span></li>
+
+             </li>
           <li class="same">zcl_ix_attachment=>createAttachmentFromXString is passed the crepId (repo Id),
               filename, app and attachment; it:
               <ul>
@@ -455,7 +462,8 @@ table, th, td {
     <td>zcl_ix_attachment=&gt;getAttachmentAsXString / DNATT</td>
     <td><ul>
            <li>When method is called (from fm z_ix_irp_process_action) it is passed in:
-               crep_id = 'Z2', filename, docid, it is returned the attachment as xString.</li>
+               crep_id = 'Z2', filename, docid, it is returned the attachment as xString.
+               <span class="didChange">Added 'app' parm to this method</span></li>
 
            <li>This method calls local method getAttachment, it's passed the same input parms;
                the return parms are: attachment as a binary table (type iwp_t_tbl1024) and
@@ -894,7 +902,9 @@ There is a lot of common code between file repository and comdoc.</p>
 		    	  	  <li>calls method cl_gui_frontend_services=>execute, passing in 'file_path_name', this
 		    	  	  	  will launch the application that handles that type of file</li>
 		    	  	</ul>
-		    	  </td>
+		    	  <span class="didChange">We changed it so this form now calls 
+            zcl_ix_attachment=>display (no need for dupe logic); this also resolves the issue
+            above with not opening file that has same name as existing detached file</span></td>
 		    	</tr>
 
 		    	<tr>
@@ -1008,7 +1018,7 @@ There is a lot of common code between file repository and comdoc.</p>
         changes (in fm and subroutine process_file_name)<span class="didChange">Changed 
         to use common methods, changed logic in process_file_name to delete from zix_documents
         and then call the z_ix_process_toa01 fm to handle the rest... left old form there
-        for reference</span></td>
+        for reference (code is in fg: zix_bds_bapi)</span></td>
   </tr>
 </table>	
 
@@ -1075,6 +1085,19 @@ There is a lot of common code between file repository and comdoc.</p>
       </td>
   </tr>
 
+  <tr>
+    <td></td>
+    <td id="z_iv_documents_clone">z_iv_documents_clone</td>
+      <td>
+        <ul>          
+          <li>Had reference to <a href="scms_doc_copy">scms_doc_copy</a>, 
+              <span class="didChange">I created 'copyAttachment*' methods in the
+              zcl_ix_attachment class to do this instead and changed this fm to
+              call that method.</span>  The fm is called when proposal is cloned.</li>
+        </ul>
+      </td>
+  </tr>
+
   
 
   <!-- ============================================== FG: ZIX_COMDOC ================================== -->
@@ -1107,9 +1130,11 @@ There is a lot of common code between file repository and comdoc.</p>
 		  <td>This function module displays the document to the user (i.e. launches the appropriate
 		  	  app/screen for it).  The only argument into this function is docId.  
 		  	  This function calls sap function <strong>bds_object_display_intern</strong>
-		  	  with the following parms.  <span class="didChange">Needs to be changed, we are
+		  	  with the following parms.  <span class="didChange">Needs to be changed, <del>we are
           still using bds_object_display_intern but other changes were necessary to support
-          migration</span>
+          migration</del>  we created new method in zcl_ix_attachment=>display, we changed
+          this funciton to just call that method (left old logic in (commented out) for 
+          reference but we should remove down the road).</span>
         <ul>
         	<li>className     - If repoId is z2 then uses zix_documents-attachpoint else blank</li>  
         	<li>classType     - 'BO'</li>      	
@@ -1127,7 +1152,7 @@ There is a lot of common code between file repository and comdoc.</p>
   <td></td>
 		<td id="z_iv_edit_doc">z_iv_edit_doc</td>
 		  <td>This function module is called with the existing docId, it returns the
-		  	  newDocId.  Logic <span class="didChange">Needs to be changed</span>
+		  	  newDocId.  Logic <span class="didChange">Changed, see notes below</span>
         <ul>
         	<li>Calls program <a href="#zix_document_edit">
         	    zix_document_edit</a> passing in docId.  Upon
@@ -1315,6 +1340,47 @@ There is a lot of common code between file repository and comdoc.</p>
 		  </td>
   </tr>
 
+  
+
+
+  <!-- ============================================== FG: ZIV_NONHOT_DOC ============================== -->
+  <tr>  
+    <td class="FuncGroup" colspan="3" id="ziv_nonhot_doc">Function Group <strong>ziv_nonhot_doc</strong></td> 
+  </tr>
+  <tr>
+    <td></td>
+    <td>method handle_user_command</td>
+      <td>
+        <ul>
+          <li>There were calls to <a href="bds_oject_display_intern">bds_object_display_intern</a>
+              in the top include.
+              <span class="didChange">I changed them to use fm z_iv_cm_display instead.</span>
+              This was found during testing (attaching docs to a proposal)</li>         
+        </ul>
+      </td>
+  </tr>
+
+
+
+
+  <!-- ============================================== FG: ZIV_HOT_DOC ================================= -->
+  <tr>  
+    <td class="FuncGroup" colspan="3" id="ziv_hot_doc">Function Group <strong>ziv_hot_doc</strong></td> 
+  </tr>
+  <tr>
+    <td></td>
+    <td>method handle_user_command</td>
+      <td>
+        <ul>
+          <li>There were also calls to <a href="#bds_object_display_intern">bds_object_display_intern</a>
+              in the top include (looks very similar to ziv_nonhot*).
+              <span class="didChange">I changed them to use fm z_iv_cm_display instead.</span>
+              This was found during testing (attaching docs to a proposal)</li>         
+        </ul>
+      </td>
+  </tr>
+
+
 
 
   <!-- ============================================== FG: ALINK_DISPLAY_DOCUMENTS (SAP CODE) ========== -->
@@ -1327,8 +1393,10 @@ There is a lot of common code between file repository and comdoc.</p>
 		<td id="alink_documents_create_dialog">alink_documents_create_dialog</td>
 		  <td>
         <ul>
-        	<li>This creates a document in the content repository.  <span class="mustChange">We shouldn't see 
-          references in z* code after common modules implemented</span></li>        	
+        	<li>This creates a document in the content repository.  <span class="reviewed">
+              This is used in zcl_arl_srv_link->execute but that is not in other systems, assume
+              it was play code that Doug M had only in ii0.  Other references were also local
+               objects in ii0.</span></li>        	
         </ul>
 		  </td>
   </tr>
@@ -1372,15 +1440,16 @@ There is a lot of common code between file repository and comdoc.</p>
         <ul>
         	<li>This returns the document as table(s) of data; say tables cause it returns a table
         	    in char 1024 format and also a table of raw data in 1024 format.  
-        	    <span class="mustChange">When we migrate to new objects you shouldn't see any 
-        	    references to this fm in our code</span></li>  
+        	    <span class="reviewed">Don't see references to this in our code</span></li>  
               <ul class="reviewed">
-                <li>Found call in fm Z_IX_ACHIVOBJECT_GET_VIA_TABLE, that code looks dead so I put
-                    in an 'assert' which will cause an abap dump if it is</li>      	
+                <li>Found call in fm Z_IX_ACHIVOBJECT_GET_VIA_TABLE (fg: zix_alink), that code looks dead
+                    <span class="didChange">Changed: I put in an 'assert' which will cause 
+                    an abap dump if it is</span></li>      	
                 <li>Found form 'displaySAPOld in zix_document_utilities function group, the code
-                    was dead so removed it (it had call to archiveobject_get_table)</li>
-                <li>Found changes needed in program ZIX_EMAIL_FAX_DOCUMENTS$$$$$
-                    <span class="mustChange"> fix/test update prologue</span> </li>
+                    was dead.<span class="didChange">Changed: I removed the form it (it had call 
+                    to archiveobject_get_table)</span></li>
+                <li>Found changes needed in program ZIX_EMAIL_FAX_DOCUMENTS
+                    <span class="didChange">Changed to new new methods instead</span> </li>
               </ul>              
         </ul>
 		  </td>
@@ -1398,10 +1467,23 @@ There is a lot of common code between file repository and comdoc.</p>
 		  <td>
         <ul>
         	<li>This fm is provided by sap, it is called to create a document.   
-        	    <span class="mustChange">When we migrate to new objects you shouldn't see any 
-        	    references to this fm in our code</span></li>        	
+        	    <span class="reviewed">There was an inactive reference to this fm in form 'save_file' in
+                the zivt function group but that isn't called anywhere so no action taken/required.</span></li>        	
         </ul>
 		  </td>
+  </tr>
+
+  <tr>
+    <td></td>
+    <td id="scms_doc_copy">scms_doc_copy</td>
+      <td>
+        <ul>
+          <li>This fm is provided by sap, it is called to copy one document to another.   
+              <span class="reviewed">There was reference in z_iv_documents_clone; I changed
+                that to use new method in zcl_ix_attachments class and put this fm in
+                there (method copyAttachment_Int).</span></li>         
+        </ul>
+      </td>
   </tr>
 
 
@@ -1417,9 +1499,14 @@ There is a lot of common code between file repository and comdoc.</p>
         <ul>
         	<li>This fm is provided by sap, it will create a document in the http
         		  repository.  The repository id and doc info/data are passed as arguments in; it
-        		  returns the docid of the doc created.
-        	    <span class="mustChange">When we migrate to new objects you shouldn't see any 
-        	    references to this fm in our code</span></li>        	
+        		  returns the docid of the doc created. <span class="reviewed">Checked references
+              after code changed:
+        	    <ul class="reviewed">
+                <li>Used in fm: Z_IW_ATTACH_DOCUMENT_POC, but this is local obj so no action taken/required.</li>
+                <li>Used in pgm: ZIV_MQTEST14 but that's also local obj, no action required</li>
+                <li>The other references were obvious to be local obj's so didn't research further</li>
+              </ul>
+              </span></li>        	
         </ul>
         <table>
           <tr><th>Where used</th><th>ParmType</th><th>Parm</th><th>Desc/Notes</th></tr>
@@ -1465,8 +1552,8 @@ There is a lot of common code between file repository and comdoc.</p>
       <td>
         <ul>
           <li>This fm is provided by sap, it delets a document from a repository.
-              <span class="mustChange">When we migrate to new objects you shouldn't see any 
-              references to this fm in our code</span></li>         
+              <span class="reviewed">Only reference was in local program ZIX_TEST_TOA0N_DELETE, so no
+              action taken/required.</span></li>         
         </ul>        
       </td>
   </tr>
@@ -1483,8 +1570,7 @@ There is a lot of common code between file repository and comdoc.</p>
         <ul>
         	<li>This function module retrieves the attachment from the repository
         	    and stores it in the path specified by parameter (locally on users machine).
-        	    <span class="mustChange">When we migrate to new objects you shouldn't see any 
-        	    references to this fm in our code</span></li>        	
+        	    <span class="reviewed">Don't see any references to this any longer</span></li>        	
         </ul>
 		  </td>
   </tr>
@@ -1502,8 +1588,8 @@ There is a lot of common code between file repository and comdoc.</p>
         		  machine for the document requested; it's as if the document
         		  was opened from operating system (i.e. not from within a sap
         		  pane).  Pretty cool :)<br/>
-        	    <span class="didChange">When we migrate to new objects you shouldn't see any 
-        	    references to this fm in our code</span></li>        	
+        	    <span class="didChange">We don't have references to this fm in our
+              code any longer; we're using zcl_ix_attachment=>display now</span></li>        	
         </ul>
 		  </td>
   </tr>
@@ -1757,7 +1843,8 @@ There is a lot of common code between file repository and comdoc.</p>
            <li>calls <a href="#zix_doc_content_manager$get_file_extension">get_file_extension</a> to
          	   get fileExtension (will be returned in upper case (blank if no extension found))</li>
          	 <li>Calls function <a href="#bds_object_display_intern">bds_object_display_intern</a>
-         	     this will display the document</li>
+         	     this will display the document <span class="didChange">We changed this so that
+               it calls zcl_ix_attachment=>display now</span></li>
         </ul></td>            
 	</tr>
   <tr><td></td>

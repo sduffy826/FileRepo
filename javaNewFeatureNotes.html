@@ -1,0 +1,38 @@
+<h3>Java 7 new features (project <strong>Java_New_Features</strong>)</h3>
+<ul>
+  <li>Binary literals, prefix with "0b" or "0B", i.e. byte eight = 0b1000;</li>
+  <li>Underscore to make literals more readable int aMill = 1_000_000;</li>
+  <li>Switch can handle strings now (basically uses the equalsTo on string)<pre>
+     String dow = "MON";
+     switch (dow) {
+       case "SUN":
+         System.out.println("Entered Sunday");
+         break;
+       case "MON":
+         System.out.println("Entered Monday");
+         break;
+       default:
+         System.out.println("Not valid day");
+     }
+  </pre></li>
+  <li>Catching multiple exceptions, you can use OR in catch block to catch multiples<pre>
+  	try { ... }
+    catch (Exception1 | Exception2 | Exception3 e) { e.printStackTrace(); }</pre>
+  </li>
+  <li>try with resources, we'll use file io as example... in past: you open a file within 
+  	  a try block, then have multiple catch's, and a finally block to close the file, but that
+  	  finally block can also throw exceptions so you had to have another try block.  With
+  	  version 7 they introduced auto closure to make it cleaner/simpler.  What you do
+  	  is have the object that implements the autoclosable interface in the try () block, i.e <pre>
+  	    try (FileInputStream is = new FileInputStream("test.txt");
+  	         FileOutputStream os = new FileOutputStream("test.out")) { }</pre>
+  	  when the try block section of code ends it automatically calls the close method (a class
+  	  that implements the autocloseable interface just has to implement a close method)
+  </li>
+  <li>Type interface for generics: in old days you needed to have the type on the
+  	  declaration and on instantiation i.e. <pre>
+  	  ArrayList&lt;String&gt; oldWay = new ArrayList&lt;String&gt;();</pre>
+  	  With java 7 you only need it on the declaration side<pre>
+  	  ArrayList&lt;String&gt; newWay = new ArrayList&lt;&gt;();</pre>
+  </li>
+</ul>  

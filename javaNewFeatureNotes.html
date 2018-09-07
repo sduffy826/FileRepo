@@ -36,3 +36,18 @@
   	  ArrayList&lt;String&gt; newWay = new ArrayList&lt;&gt;();</pre>
   </li>
 </ul>  
+
+<h3>Java 8 new features (project <strong>Java_New_Features</strong>)</h3>
+<dl>
+	<dt>New Date/Time API</dt>
+	  <dd>Changes to date/time to address shortcomings of older java.util.Date and java.util.Calendar.
+	  	<ul>
+	  		<li>LocalDate - represents date (without time) in iso format (yyyy-MM-dd), can do
+	  			   (LocalDate locDate = LocalDate.now() or .. LocalDate.of(2015,02,20) for 2/20/2015 Note
+	  			   not 0 offset, or can do LocalDate.parse("2015-02-20")).  can use methods
+	  			   <strong>.plusDays(n)</strong> to add days, if wanted to subtrace month can
+	  			   do <strong>.minus(1, ChronoUnit.MONTHS)</strong>
+	  	</ul>
+	  </dd>
+</dl>
+where is the latest line
